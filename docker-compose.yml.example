@@ -1,0 +1,8 @@
+version: "3.9"
+services:
+  user-auth-service:
+    # continue
+  core-shop-service:
+    # continue
+  scraper-ai-service:
+    # continue
