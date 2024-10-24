@@ -4,15 +4,21 @@
 
 There is 2 teams, for each 3 students and 1 mentor:
 
-@dotpep, (github_link) Mentor - 3 students:
-    - @, Максим (github_link), core service
-    - @, Нуртай (github_link), auth/user service
-    - @, Артем (github_link), scraper service
+---
 
-@alfinky, (github_link) Mentor - 3 stundents:
-    - @, Жанболат (github_link), core service
-    - @, Ергали (github_link), auth/user service
-    - @, Бексултан (github_link), scraper service
+**@dotpep, (github_link) Mentor - 3 students:**
+
+- @, Максим (github_link), core service
+- @, Нуртай (github_link), auth/user service
+- @, Артем (github_link), scraper service
+
+---
+
+**@alfinky, (github_link) Mentor - 3 students:**
+
+- @, Жанболат (github_link), core service
+- @, Ергали (github_link), auth/user service
+- @, Бексултан (github_link), scraper service
 
 ---
 
@@ -25,13 +31,14 @@ Main goals of this project is to mentor.
 - [ ] write Table of content
 - [ ] additional Technical Requirements
 - [ ] structure Boilerplate and Architectural dirs
+- [ ] how it will be implemented, think about logic of User Group/Role Management, in User-Auth-Service (or it need like another separated service)
 
 ## Principles and Rules
 
 - Write Unit Test
 - Write Documentation on `some-service/README.md`
 
-Programming Principles:
+**Programming Principles:**
 
 - Clean Code and Clean Architecture
 - SOLID
@@ -42,13 +49,13 @@ Programming Principles:
 
 ## E-Commerce Microservices
 
-Base service:
+Base services:
 
-- Auth User service
+- User Auth service
 - Core Shop service
 - Scraper and AI service
 
-Additional service:
+Additional services:
 
 - Payment system/service
 - Notification system/service
@@ -59,7 +66,18 @@ Additional Components:
 - CI/CD Pipeline
 - Centralized Logging system (ELK)
 
-### Auth User service
+### User Auth service
+
+- User Authentication/Authorization with `JWT`, sending confirmation code via `SMTP` email.
+- Password Recovery/Reset feature (Forgot Password) and it will send email to recovery/reset and set new password.
+- Server Side cache storing for Auth in `Redis`, login expiration session date or time.
+- Database `MongoDB` or `PostgreSQL`
+- User Group/Role Management (It need to be Integrate/Communicate with `Core-Shop-Service`):
+    - `Admin`, can assign Group/Role for other Clients/Users
+    - `Manager`, can POST/Create or DELETE, and manipulate `Products`, `Category` Entities in `Core-Shop-Service`. Also assign a `Order` to a `Delivery` role.
+    - `Delivery`, can handle Clients Order and check `ShippingAdress`, confirm that it was delivered.
+    - `Client`/`Customer`/`Auth User`, can Add `Product` to `Bucket`/`OrderItem`, confirm that order has arrived.
+    - `Unauth User`/`Not registered User`, can only View Product lists, Filter by Category them, and Register account as Client (Auth via JWT).
 
 ### Core Shop service
 
@@ -72,8 +90,8 @@ Additional Components:
 - `Gin` for API, `Colly` for Scraping, `OpenAI/Or other` for Filtering Scraped Product from other E-Shops.
 - Communication with Databases (use whetever libs, methods you want, ORMs or Raw SQL query)
 - PostgreSQL for `Core-Shop-Service`
-- MongoDB for `User-Auth-Service`
-- Cache Redis for `User-Authentication` session, `User-Order-Bucket` and etc.
+- MongoDB or PostgreSQL for `User-Auth-Service`
+- Cache Redis for `User-Authentication` in `User-Auth-Service` expiration session, `User-OrderItem-Bucket`/`OrderItem`/`Bucket` in `Core-Shop-Service` and etc.
 - JWT for Authentication/Authorization
 
 ---
@@ -88,8 +106,11 @@ Additional Components:
 
 **For Future:**
 
-- gRPC and API Gateway (for future)
 - Docker containers, Docker Compose and CI/CD Pipeline (for future)
+- gRPC and API Gateway (for future)
+- RabbitMQ, Celery (for future)
+- Logging and Monitoring, ELK stack (for future)
+- K8s (for future)
 
 ## Some Explanation for Students
 
