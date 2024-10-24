@@ -1,6 +1,6 @@
 # Technical Requirements (E-Commerce Backend API)
 
-`Техническое задание для студентов на Интернет Магазин Проект на Голанге`
+Russian Title: `Техническое задание для студентов на Интернет Магазин Проект на Голанге`
 
 There is 2 teams, for each 3 students and 1 mentor:
 
@@ -35,8 +35,11 @@ Main goals of this project is to mentor.
 
 ## Principles and Rules
 
-- Write Unit Test
-- Write Documentation on `some-service/README.md`
+- Write and Cover your service with Unit Tests.
+- Write Documentation on `your-service/README.md`, and also provide other materials in `docs/service-name/something_to_document`.
+- Write good Commit messages.
+- English Only!
+- Stick With Good Programming Principles/Practices below:
 
 **Programming Principles:**
 
@@ -49,22 +52,30 @@ Main goals of this project is to mentor.
 
 ## E-Commerce Microservices
 
-Base services:
+**Base services:**
 
 - User Auth service
 - Core Shop service
 - Scraper and AI service
 
-Additional services:
+---
+
+**Additional services:**
 
 - Payment system/service
 - Notification system/service
+- Divide Core-Shop-Service into smallest services
 
-Additional Components:
+---
 
-- Docker Containerization and Docker compose
+**Additional Components/Features:**
+
+- Docker Containerization and Docker Compose
 - CI/CD Pipeline
-- Centralized Logging system (ELK)
+- Centralized Logging system (ELK), Monitoring
+- API Gateway, gRPC API
+- RabbitMQ - Message Broker, Celery - Task Queue
+- K8s Container Orchestration
 
 ### User Auth service
 
@@ -78,7 +89,7 @@ Additional Components:
     - `Delivery`, can handle Clients Order and check `ShippingAdress`, confirm that it was delivered.
     - `Client`/`Customer`/`Auth User`, can Add `Product` to `Bucket`/`OrderItem`, confirm that order has arrived.
     - `Unauth User`/`Not registered User`, can only View Product lists, Filter by Category them, and Register account as Client (Auth via JWT).
-
+****
 ### Core Shop service
 
 ### Scraper and AI service
@@ -108,15 +119,19 @@ Additional Components:
 
 - Docker containers, Docker Compose and CI/CD Pipeline (for future)
 - gRPC and API Gateway (for future)
-- RabbitMQ, Celery (for future)
 - Logging and Monitoring, ELK stack (for future)
+- RabbitMQ, Celery (for future)
 - K8s (for future)
 
 ## Some Explanation for Students
 
 - You need to delete/cut `.example` name part in your files and make it own/use it.
 - Some files like docker-compose.yml, and like api-gateway dir and etc. it's for future. First of all try to use and implement it in your local machine without using Docker and etc.
-- You should work only on your provided service `some-service/` directory.
+- You should work only on your provided service `your-service/` directory.
+- Write documentation only in `docs/service-name/something_to_document`.
+- Write Unit Tests in `your-service/tests/`. (delete `unit_tests.here.example` file).
+- Write Core of your service API/App in `your-service/internal/`. (delete `core_of_your_api_service.here.example` file).
+- Make Module, `go.mod`, `go.sum`.
 
 ---
 
@@ -125,7 +140,7 @@ Additional Components:
 `Deadline is 1 month, start date: 26.10.2024, end date: 30.11.2024`
 
 - First step: use `git clone`
-- You will just make pull request, with changes in your `some-service/`, push it.
+- You will just make pull request, with changes in your `your-service/`, push it.
 - And We Mentors will be `code review` your code and apply or decline.
 - Also 1 week 1 meetup, We will make some lections and activities, you will explain your written code, and etc. communication things.
 - Students have TODO Tasks in Project Kanban Board assigned from mentor. It will be like 1 task 1 week, with issued in project and assigned to student.
