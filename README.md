@@ -36,7 +36,7 @@ Main goals of this project is to mentor.
 ## Principles and Rules
 
 - Write and Cover your service with Unit Tests.
-- Write Documentation on `your-service/README.md`, and also provide other materials in `docs/service-name/something_to_document`.
+- Write Documentation on `services/your-service/README.md`, and also provide other materials in `docs/service-name/something_to_document`.
 - Write good Commit messages.
 - English Only!
 - Stick With Good Programming Principles/Practices below:
@@ -51,6 +51,10 @@ Main goals of this project is to mentor.
 - Naming Convention
 
 ## E-Commerce Microservices
+
+More information given in: `services/README.md`.
+
+---
 
 **Base services:**
 
@@ -76,23 +80,6 @@ Main goals of this project is to mentor.
 - API Gateway, gRPC API
 - RabbitMQ - Message Broker, Celery - Task Queue
 - K8s Container Orchestration
-
-### User Auth service
-
-- User Authentication/Authorization with `JWT`, sending confirmation code via `SMTP` email.
-- Password Recovery/Reset feature (Forgot Password) and it will send email to recovery/reset and set new password.
-- Server Side cache storing for Auth in `Redis`, login expiration session date or time.
-- Database `MongoDB` or `PostgreSQL`
-- User Group/Role Management (It need to be Integrate/Communicate with `Core-Shop-Service`):
-    - `Admin`, can assign Group/Role for other Clients/Users
-    - `Manager`, can POST/Create or DELETE, and manipulate `Products`, `Category` Entities in `Core-Shop-Service`. Also assign a `Order` to a `Delivery` role.
-    - `Delivery`, can handle Clients Order and check `ShippingAdress`, confirm that it was delivered.
-    - `Client`/`Customer`/`Auth User`, can Add `Product` to `Bucket`/`OrderItem`, confirm that order has arrived.
-    - `Unauth User`/`Not registered User`, can only View Product lists, Filter by Category them, and Register account as Client (Auth via JWT).
-****
-### Core Shop service
-
-### Scraper and AI service
 
 ## Tech Stack
 
@@ -125,12 +112,13 @@ Main goals of this project is to mentor.
 
 ## Some Explanation for Students
 
+- Check `services/README.md`, there is Technical Requirements for each Services.
 - You need to delete/cut `.example` name part in your files and make it own/use it.
 - Some files like docker-compose.yml, and like api-gateway dir and etc. it's for future. First of all try to use and implement it in your local machine without using Docker and etc.
-- You should work only on your provided service `your-service/` directory.
+- You should work only on your provided service `services/your-service/` directory.
 - Write documentation only in `docs/service-name/something_to_document`.
-- Write Unit Tests in `your-service/tests/`. (delete `unit_tests.here.example` file).
-- Write Core of your service API/App in `your-service/internal/`. (delete `core_of_your_api_service.here.example` file).
+- Write Unit Tests in `services/your-service/tests/`. (delete `unit_tests.here.example` file).
+- Write Core of your service API/App in `services/your-service/internal/`. (delete `core_of_your_api_service.here.example` file).
 - Make Module, `go.mod`, `go.sum`.
 
 ---
@@ -140,7 +128,7 @@ Main goals of this project is to mentor.
 `Deadline is 1 month, start date: 26.10.2024, end date: 30.11.2024`
 
 - First step: use `git clone`
-- You will just make pull request, with changes in your `your-service/`, push it.
+- You will just make pull request, with changes in your `services/your-service/`, push it.
 - And We Mentors will be `code review` your code and apply or decline.
 - Also 1 week 1 meetup, We will make some lections and activities, you will explain your written code, and etc. communication things.
 - Students have TODO Tasks in Project Kanban Board assigned from mentor. It will be like 1 task 1 week, with issued in project and assigned to student.

@@ -4,5 +4,5 @@ services:
     # continue
   core-shop-service:
     # continue
-  scraper-ai-service:
+  scraper-and-ai-service:
     # continue
