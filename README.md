@@ -39,17 +39,26 @@ Main goals of this project is to mentor.
 - Write Documentation on `src/your-service/README.md`, and also provide other materials in `docs/service-name/something_to_document`.
 - Write good Commit messages.
 - English Only!
-- Stick With Good Programming Principles/Practices below:
+- Stick and Follow With Good Programming Principles/Practices below:
 
-**Programming Principles:**
+**Programming Principles and Best Practices:**
 
 - Clean Code and Clean Architecture
 - SOLID
 - DRY
 - KISS
 - YAGNI
-- Naming Convention
-- Service Documenting, README and Docstrings for Functions
+- Follow Naming Convention
+- Documenting, (README, Schemas, ER-D) and Docstrings for Functions.
+
+**In API's Dev:**
+
+- Caching
+- Rate Limiting
+- Versioning
+- OpenAPI/Swagger API Documentation
+- Follow RESTful/URIs Resource, Endpoints - Naming Convention
+- There is also Best Practices in RDBMS/DBMS (Databases) - `created at` and `updated at` column in almost every Table/Entity, use `unix time stamp`/`unix epoch`.
 
 ## E-Commerce Microservices
 
