@@ -1,5 +1,7 @@
 # Services (Technical Requirements)
 
+**In TODO:**
+
 - User Auth service
 - Core Shop service
 - Scraper and AI service
@@ -10,6 +12,11 @@
 - Password Recovery/Reset feature (Forgot Password) and it will send email to recovery/reset and set new password.
 - Server Side cache storing for Auth in `Redis`, login expiration session date or time.
 - Database `MongoDB` or `PostgreSQL`
+
+---
+
+**Postponed To Later (and for Consideration):**
+
 - User Group/Role Management (It need to be Integrate/Communicate with `Core-Shop-Service`):
     - `Admin`, can assign Group/Role for other Clients/Users
     - `Manager`, can POST/Create or DELETE, and manipulate `Products`, `Category` Entities in `Core-Shop-Service`. Also assign a `Order` to a `Delivery` role.
