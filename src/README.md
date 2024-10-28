@@ -32,6 +32,8 @@
 - Golang Gin for API
 - JWT for User Auth
 
+---
+
 - User Authentication/Authorization with `JWT`, sending confirmation code via `SMTP` email.
 - Password Recovery/Reset feature (Forgot Password) and it will send email to recovery/reset and set new password.
 - Server Side cache storing for Auth in `Redis`, login expiration session date or time.
@@ -54,13 +56,16 @@
 - Golang Gin for API
 - PostgreSQL as Database (RDBMS)
 
-- CRUD operations and Endpoints:
+---
+
+- CRUD operations and API Endpoints:
+    - Basic CRUD of E-Commerce Shop:
     - `one product` - get, create, delete, edit.
     - `list of products` - get.
     - `category` - create, delete.
     - `list of categories` - get.
     - `list of products in category` get `list of product` that have follow/relation with this category.
-    - Unrequired for now (It might be separeted Service and in Consideration):
+    - Unrequired for now (It might be separeted Service and in Consideration) (more CRUD in Management):
     - add `product` to `order item`.
     - get specific `user`, `order item` with `list of products` that was added.
     - process user `order item` and create `order`
@@ -83,15 +88,29 @@
 
 E-Commerce ER-D:
 
-![E-Commerce ER-D](docs/img/e-commerce_er-d.png)
+![E-Commerce ER-D](/docs/img/e-commerce_er-d.png)
 
 ---
 
 Restaurant ER-D:
 
-![Restaurant ER-D](docs/img/restaurant_er-d.png)
+![Restaurant ER-D](/docs/img/restaurant_er-d.png)
 
 ## Scraper and AI service
 
 - Golang Colly as Scraper
 - OpenAI API for Filtering
+
+---
+
+**Scrap other service (Book seller Shops):**
+
+- Scrape Amazon Shop, Flip.kz, Kaspi Shop, Meloman (marwin) kz websites (choose one of them first) Book section and save it in database Product table, using Golang Colly library, make http request and get html data, work with divs and html tags.
+
+**Basic CRUD:**
+
+- define what scraped data you need save, in your database table/entity.
+- get product by id
+- get list of products
+- Add Pagination feature
+- Filter by price, descending and ascending order

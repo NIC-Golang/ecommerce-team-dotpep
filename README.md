@@ -49,7 +49,7 @@ Main goals of this project is to mentor.
 - KISS
 - YAGNI
 - Follow Naming Convention
-- Documenting, (README, Schemas, ER-D) and Docstrings for Functions.
+- Documenting, (README, Schemas, ER-D, UML Diagrams, etc.) and Docstrings for Functions.
 
 **In API's Dev:**
 
@@ -175,13 +175,13 @@ git merge
 
 E-Commerce ER-D:
 
-![E-Commerce ER-D](docs/img/e-commerce_er-d.png)
+![E-Commerce ER-D](/docs/img/e-commerce_er-d.png)
 
 ---
 
 Restaurant ER-D:
 
-![Restaurant ER-D](docs/img/restaurant_er-d.png)
+![Restaurant ER-D](/docs/img/restaurant_er-d.png)
 
 **Links:**
 
