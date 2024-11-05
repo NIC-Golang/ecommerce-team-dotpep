@@ -6,5 +6,5 @@ Core Shop Service is a microservice for managing goods and orders in an online s
 
 - Product management: add, update, delete and view the list of products.
 - Order management: create, update and view orders.
-- - Authentication and authorization using GWT.
+- - Authentication and authorization using JWT.
 - Caching of data using Redis.
