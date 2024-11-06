@@ -11,15 +11,20 @@ import (
 )
 
 func main() {
+	//gin.SetMode(gin.ReleaseMode)
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
+	ipAddress := os.Getenv("IP")
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
+
 	router := gin.Default()
+
+	router.SetTrustedProxies([]string{ipAddress})
 	//router.Use(middleware.JWTAuthMiddleware())
 	router.GET("/api-1", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-1!"})
@@ -28,7 +33,7 @@ func main() {
 	router.GET("/api-2", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-2!"})
 	})
-	if err := router.Run(":" + port); err != nil {
+	if err := router.Run(ipAddress + ":" + port); err != nil {
 		log.Fatal("There's some error occured with running the server...")
 	}
 }
