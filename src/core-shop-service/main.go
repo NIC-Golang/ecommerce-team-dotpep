@@ -6,6 +6,7 @@ import (
 	"os"
 
 	//"github.com/core/shop/golang/internal/middleware"
+	"github.com/core/shop/golang/internal/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -26,6 +27,9 @@ func main() {
 
 	router.SetTrustedProxies([]string{ipAddress})
 	//router.Use(middleware.JWTAuthMiddleware())
+
+	routes.ProductManager(router)
+
 	router.GET("/api-1", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-1!"})
 	})
