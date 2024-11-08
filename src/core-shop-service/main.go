@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-
 	//"github.com/core/shop/golang/internal/middleware"
 	"github.com/core/shop/golang/internal/routes"
 	"github.com/gin-gonic/gin"

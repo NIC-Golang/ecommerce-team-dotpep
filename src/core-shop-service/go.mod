@@ -2,9 +2,11 @@ module github.com/core/shop/golang
 
 go 1.22.3
 
+require github.com/gin-gonic/gin v1.10.0
+
 require (
-	github.com/gin-gonic/gin v1.10.0
-	go.mongodb.org/mongo-driver v1.17.1
+	github.com/google/go-cmp v0.6.0 // indirect
+	github.com/lib/pq v1.10.9 // indirect
 )
 
 require (
