@@ -4,6 +4,9 @@ import (
 	"time"
 )
 
+type OrdersResponse struct {
+	Orders []Order `json:"orders"`
+}
 type Order struct {
 	ID          string      `json:"order_id"`
 	UserID      string      `json:"user_id"`

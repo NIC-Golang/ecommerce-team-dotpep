@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
@@ -14,62 +15,80 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func GetUsers() gin.HandlerFunc {
+func GetOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := godotenv.Load(); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			log.Fatal(err)
 			return
 		}
-		host := os.Getenv("HOST_SQL")
-		password := os.Getenv("SQL_PASS")
+		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connect := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-
-		conn, err := pgx.Connect(ctx, connect)
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		conn, err := pgx.Connect(ctx, connStr)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "There was some error with connection to database..."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
 			return
 		}
 		defer conn.Close(ctx)
+
 		if !helpers.CheckUserType(c, "ADMIN") {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "You have no rights for that..."})
+			c.JSON(400, gin.H{"error": "You have no rights for this action"})
 			return
 		}
-
-		rows, err := conn.Query(ctx, "SELECT * from clients")
+		rows, err := conn.Query(ctx, "SELECT * FROM orders")
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve orders"})
 			return
 		}
 
+		var orders []models.Order
 		defer rows.Close()
-		var users []models.CLient
+
 		for rows.Next() {
-			var user models.CLient
+			var order models.Order
 			err := rows.Scan(
-				&user.ID,
-				&user.Name,
-				&user.Last_name,
-				&user.Email,
-				&user.Phone,
-				&user.Type,
-				&user.Token,
-				&user.Refresh_token,
+				&order.ID,
+				&order.UserID,
+				&order.TotalAmount,
+				&order.Status,
+				&order.CreatedAt,
+				&order.UpdatedAt,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
-			users = append(users, user)
+			itemsRows, err := conn.Query(ctx, "SELECT * FROM order_items WHERE order_id = $1", order.ID)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+			var items []models.OrderItem
+			for itemsRows.Next() {
+				var item models.OrderItem
+				err := itemsRows.Scan(
+					&item.ProductID,
+					&item.Quantity,
+					&item.Price,
+				)
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+					return
+				}
+				items = append(items, item)
+			}
+			order.Products = items
+			orders = append(orders, order)
 		}
-		if err = rows.Err(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan products data"})
+
+		if err := rows.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan orders"})
 			return
 		}
-		c.JSON(http.StatusOK, users)
 
+		c.JSON(http.StatusOK, models.OrdersResponse{Orders: orders})
 	}
 }
