@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -18,7 +17,7 @@ import (
 func GetOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := godotenv.Load(); err != nil {
-			log.Fatal(err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading .env file"})
 			return
 		}
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
