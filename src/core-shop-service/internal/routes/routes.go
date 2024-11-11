@@ -8,9 +8,9 @@ import (
 func ProductManager(approachingRoute *gin.Engine) {
 	approachingRoute.GET("products", repositories.GetProducts())
 	approachingRoute.GET("products/:product_id", repositories.GetProduct())
-	approachingRoute.POST("products", repositories.InsertProducts())
-	approachingRoute.PUT("products/:product_id", repositories.UpdateProducts())
-	approachingRoute.DELETE("products/:product_id", repositories.DeleteProduct())
+	approachingRoute.POST("products", repositories.InsertProduct())
+	approachingRoute.PUT("products/:product_id", repositories.UpdateProduct())
+	approachingRoute.DELETE("products/:product_id", repositories.DeleteProduc())
 }
 
 func OrdersManager(approachingRoute *gin.Engine) {
