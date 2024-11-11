@@ -24,6 +24,6 @@ func OrdersManager(approachingRoute *gin.Engine) {
 func UserManager(approachingRoute *gin.Engine) {
 	approachingRoute.GET("users", repositories.GetUsers())
 	approachingRoute.GET("users/:user_id", repositories.GetUser())
-	approachingRoute.PUT("users/:user_id", repositories.UpdateUsers())
+	approachingRoute.PUT("users/:user_id", repositories.UpdateUser())
 	approachingRoute.DELETE("users/:user_id", repositories.DeleteUser())
 }
