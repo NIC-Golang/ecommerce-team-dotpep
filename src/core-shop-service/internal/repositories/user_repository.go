@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -12,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -22,12 +20,6 @@ func GetUsers() gin.HandlerFunc {
 		if adminID == "" {
 			c.JSON(500, gin.H{"error": "Your header is empty!"})
 			c.Abort()
-			return
-		}
-
-		if err := godotenv.Load(); err != nil {
-			log.Fatal(err)
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 
@@ -101,10 +93,6 @@ func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
 		adminID := c.GetHeader("AdminID")
-		if err := godotenv.Load(); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -153,11 +141,6 @@ func DeleteUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
 		adminID := c.GetHeader("AdminID")
-		err := godotenv.Load()
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
@@ -201,12 +184,6 @@ func UpdateUser() gin.HandlerFunc {
 		userId := c.Param("user_id")
 		adminID := c.GetHeader("AdminID")
 
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal(err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()

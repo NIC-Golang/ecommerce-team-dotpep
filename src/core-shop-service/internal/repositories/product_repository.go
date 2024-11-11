@@ -3,7 +3,6 @@ package repositories
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -11,17 +10,11 @@ import (
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
-	"github.com/joho/godotenv"
 )
 
 func GetProducts() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		adminID := c.GetHeader("AdminID")
-		if err := godotenv.Load(); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-
 		host := os.Getenv("HOST_SQL")
 		password := os.Getenv("SQL_PASS")
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -83,10 +76,6 @@ func GetProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
 		adminID := c.GetHeader("AdminID")
-		if err := godotenv.Load(); err != nil {
-			log.Fatal(err)
-			return
-		}
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
