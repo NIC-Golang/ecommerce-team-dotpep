@@ -165,3 +165,144 @@ func DeleteProduct() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
 	}
 }
+
+func UpdateProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productId := c.Param("product_id")
+		adminId := c.GetHeader("AdminID")
+		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		conn, err := pgx.Connect(ctx, connStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
+			return
+		}
+		defer conn.Close(ctx)
+
+		var role string
+		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
+			}
+			return
+		}
+
+		if role != "ADMIN" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You have no rights for this action!"})
+			return
+		}
+
+		var input map[string]interface{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+			return
+		}
+
+		if len(input) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No data provided for update"})
+			return
+		}
+
+		query := "UPDATE products SET "
+		params := []interface{}{}
+		paramID := 1
+
+		for key, value := range input {
+			if paramID > 1 {
+				query += ", "
+			}
+			query += fmt.Sprintf("%s = $%d", key, paramID)
+			params = append(params, value)
+			paramID++
+		}
+		query += fmt.Sprintf(" WHERE product_id = $%d", paramID)
+		params = append(params, productId)
+
+		result, err := conn.Exec(ctx, query, params...)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
+			return
+		}
+		if result.RowsAffected() == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No product found with the specified ID"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Product updated successfully"})
+	}
+}
+
+func InsertProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		adminId := c.GetHeader("AdminID")
+		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		conn, err := pgx.Connect(ctx, connStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
+			return
+		}
+		defer conn.Close(ctx)
+		role := ""
+		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "No client found with the specified Admin ID"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
+			}
+			return
+		}
+		if role != "ADMIN" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You have no rights for this action!"})
+			return
+		}
+
+		var input map[string]interface{}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input data"})
+			return
+		}
+		if len(input) == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "No data provided for update"})
+			return
+		}
+
+		query := "INSERT INTO products ("
+		values := "VALUES ("
+		var params []interface{}
+
+		for key, value := range input {
+			query += fmt.Sprintf("%s, ", key)
+			values += fmt.Sprintf("$%d, ", len(params)+1)
+			params = append(params, value)
+		}
+
+		query = query[:len(query)-2]
+		values = values[:len(values)-2]
+
+		query += ") " + values
+
+		result, err := conn.Exec(ctx, query, params...)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
+			return
+		}
+
+		if result.RowsAffected() == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No product found with the specified ID"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Product inserted successfully!"})
+
+	}
+}
