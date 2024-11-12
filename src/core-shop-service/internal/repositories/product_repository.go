@@ -123,3 +123,45 @@ func GetProduct() gin.HandlerFunc {
 		c.JSON(http.StatusOK, product)
 	}
 }
+
+func DeleteProduct() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		productId := c.Param("product_id")
+		adminId := c.GetHeader("AdminID")
+
+		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
+		connStr := fmt.Sprintf("postgres://Fivret:%s@localhost:%s/project", password, host)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+		defer cancel()
+		conn, err := pgx.Connect(ctx, connStr)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		role := ""
+		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
+		if err != nil {
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
+			}
+			return
+		}
+		if role != "ADMIN" {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have no rights for this action!"})
+			return
+		}
+		result, err := conn.Exec(ctx, "DELETE FROM products WHERE product_id = $1", productId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if result.RowsAffected() == 0 {
+			c.JSON(http.StatusNotFound, gin.H{"error": "No product found with the specified ID"})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
+	}
+}
