@@ -15,10 +15,9 @@ func ProductManager(approachingRoute *gin.Engine) {
 
 func OrdersManager(approachingRoute *gin.Engine) {
 	approachingRoute.GET("orders", repositories.GetOrders())
-	approachingRoute.GET("orders/:order_id", repositories.GetOrder())
+	approachingRoute.GET("orders/:client_id", repositories.GetUsersOrders())
 	approachingRoute.POST("orders", repositories.MakeAnOrder())
-	approachingRoute.PUT("orders/:order_id", repositories.UpdateOrder())
-	approachingRoute.DELETE("orders/:order_id", repositories.DeleteOrder())
+	approachingRoute.DELETE("orders/:order_id", repositories.DeleteOrderByOrderId())
 }
 
 func UserManager(approachingRoute *gin.Engine) {
