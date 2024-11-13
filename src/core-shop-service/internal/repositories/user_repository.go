@@ -16,13 +16,6 @@ import (
 
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		adminID := c.GetHeader("AdminID")
-		if adminID == "" {
-			c.JSON(500, gin.H{"error": "Your header is empty!"})
-			c.Abort()
-			return
-		}
-
 		host := os.Getenv("HOST_SQL")
 		password := os.Getenv("SQL_PASS")
 
@@ -36,22 +29,6 @@ func GetUsers() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminID).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusNotFound, gin.H{"error": "No client found with the specified ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Query failed"})
-			}
-			return
-		}
-
-		if role != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You have no rights for that"})
-			return
-		}
 
 		rows, err := conn.Query(ctx, "SELECT * FROM clients")
 		if err != nil {
@@ -92,7 +69,6 @@ func GetUsers() gin.HandlerFunc {
 func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		adminID := c.GetHeader("AdminID")
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
@@ -103,20 +79,7 @@ func GetUser() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = 1$", adminID).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusNotFound, gin.H{"error": "No client found with the specified ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Query failed"})
-			}
-			return
-		}
-		if role != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You have no rights for this action"})
-			return
-		}
+
 		var user models.CLient
 		err = conn.QueryRow(ctx, "SELECT client_id,client_name, client_last_name, client_email, client_phone, client_type,token, refresh_token FROM clients WHERE client_id = 1$", userId).Scan(
 			&user.ID,
@@ -140,7 +103,6 @@ func GetUser() gin.HandlerFunc {
 func DeleteUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		adminID := c.GetHeader("AdminID")
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
@@ -151,20 +113,7 @@ func DeleteUser() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminID).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
-			}
-			return
-		}
-		if role != "ADMIN" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have no rights for this action!"})
-			return
-		}
+
 		result, err := conn.Exec(ctx, "DELETE FROM clients WHERE client_id = $1", userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

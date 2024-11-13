@@ -7,7 +7,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/core/shop/golang/internal/helpers"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
@@ -32,10 +31,6 @@ func GetOrders() gin.HandlerFunc {
 		}
 		defer conn.Close(ctx)
 
-		if !helpers.CheckUserType(c, "ADMIN") {
-			c.JSON(400, gin.H{"error": "You have no rights for this action"})
-			return
-		}
 		rows, err := conn.Query(ctx, "SELECT * FROM orders")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve orders"})
@@ -95,7 +90,6 @@ func GetOrders() gin.HandlerFunc {
 func GetUsersOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("client_id")
-		adminId := c.GetHeader("AdminID")
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -107,21 +101,6 @@ func GetUsersOrders() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
-			}
-			return
-		}
-		if role != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to view this information"})
-			return
-		}
 
 		rows, err := conn.Query(ctx, "SELECT order_id, user_id, total_amount, status, created_at, updated_at FROM orders WHERE user_id = $1", userId)
 		if err != nil {
@@ -178,7 +157,6 @@ func GetUsersOrders() gin.HandlerFunc {
 func DeleteOrderByOrderId() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderId := c.Param("order_id")
-		adminId := c.GetHeader("AdminID")
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -190,21 +168,6 @@ func DeleteOrderByOrderId() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
-			}
-			return
-		}
-		if role != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to view this information"})
-			return
-		}
 
 		result, err := conn.Exec(ctx, "DELETE FROM order_items WHERE order_id = $1", orderId)
 		if err != nil {
@@ -239,7 +202,6 @@ func MakeAnOrder() gin.HandlerFunc {
 			return
 		}
 
-		adminId := c.GetHeader("AdminID")
 		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -252,21 +214,6 @@ func MakeAnOrder() gin.HandlerFunc {
 			return
 		}
 		defer conn.Close(ctx)
-
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminId).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
-			}
-			return
-		}
-		if role != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You don't have permission to view this information"})
-			return
-		}
 
 		tx, err := conn.Begin(ctx)
 		if err != nil {
