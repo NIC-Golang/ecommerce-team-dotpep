@@ -10,6 +10,7 @@ import (
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
+	"github.com/joho/godotenv"
 )
 
 func GetProducts() gin.HandlerFunc {
@@ -183,8 +184,13 @@ func UpdateProduct() gin.HandlerFunc {
 
 func InsertProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+
+		_ = godotenv.Load()
+		password, port, host := os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL"), os.Getenv("IP2")
+		if port == "" {
+			port = "5432"
+		}
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project?sslmode=disable", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		conn, err := pgx.Connect(ctx, connStr)
@@ -204,29 +210,22 @@ func InsertProduct() gin.HandlerFunc {
 			return
 		}
 
-		query := "INSERT INTO products ("
-		values := "VALUES ("
+		query := "INSERT INTO products (product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at) "
+		location := time.FixedZone("UTC+5", 5*60*60)
+		created_at := time.Now().In(location).Format(time.RFC3339)
+		updated_at := time.Now().In(location).Format(time.RFC3339)
+		values := "VALUES ($1, $2, $3, $4, $5, $6, $7)"
 		var params []interface{}
+		params = append(params, input["product_name"], input["product_description"], input["product_price"], input["product_sku"], input["product_quantity"], created_at, updated_at)
 
-		for key, value := range input {
-			query += fmt.Sprintf("%s, ", key)
-			values += fmt.Sprintf("$%d, ", len(params)+1)
-			params = append(params, value)
-		}
-
-		query = query[:len(query)-2]
-		values = values[:len(values)-2]
-
-		query += ") " + values
-
-		result, err := conn.Exec(ctx, query, params...)
+		result, err := conn.Exec(ctx, query+values, params...)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to insert product: %v", err)})
 			return
 		}
 
 		if result.RowsAffected() == 0 {
-			c.JSON(http.StatusNotFound, gin.H{"error": "No product found with the specified ID"})
+			c.JSON(http.StatusNotFound, gin.H{"error": "Failed to insert product"})
 			return
 		}
 
