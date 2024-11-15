@@ -5,6 +5,12 @@ go 1.22.3
 require github.com/gin-gonic/gin v1.10.0
 
 require (
+	github.com/Owloops/updo v0.1.2 // indirect
+	github.com/caio/go-tdigest/v4 v4.0.1 // indirect
+	github.com/gen2brain/beeep v0.0.0-20230907135156-1a38885a97fc // indirect
+	github.com/gizak/termui/v3 v3.1.0 // indirect
+	github.com/go-toast/toast v0.0.0-20190211030409-01e6764cf0a4 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.3 // indirect
@@ -15,6 +21,12 @@ require (
 	github.com/jackc/pgtype v1.14.0 // indirect
 	github.com/jackc/pgx/v4 v4.18.3 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/mattn/go-runewidth v0.0.15 // indirect
+	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
+	github.com/nsf/termbox-go v0.0.0-20190121233118-02980233997d // indirect
+	github.com/nu7hatch/gouuid v0.0.0-20131221200532-179d4d0c4d8d // indirect
+	github.com/rivo/uniseg v0.2.0 // indirect
+	github.com/tadvi/systray v0.0.0-20190226123456-11a2b8fa57af // indirect
 )
 
 require (

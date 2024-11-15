@@ -15,11 +15,10 @@ import (
 
 func GetProducts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := os.Getenv("HOST_SQL")
-		password := os.Getenv("SQL_PASS")
+		host, password, port := os.Getenv("IP3"), os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL")
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		conn, err := pgx.Connect(ctx, connStr)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
@@ -66,8 +65,8 @@ func GetProducts() gin.HandlerFunc {
 func GetProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
 		conn, err := pgx.Connect(ctx, connStr)
@@ -77,7 +76,7 @@ func GetProduct() gin.HandlerFunc {
 		}
 		defer conn.Close(ctx)
 		var product models.Product
-		err = conn.QueryRow(ctx, "SELECT product_id, product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at FROM products WHERE product_id = $1", productId).Scan(
+		err = conn.QueryRow(ctx, "SELECT id, product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at FROM products WHERE id = $1", productId).Scan(
 			&product.ID,
 			&product.Name,
 			&product.Description,
@@ -103,8 +102,8 @@ func GetProduct() gin.HandlerFunc {
 func DeleteProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-		connStr := fmt.Sprintf("postgres://Fivret:%s@localhost:%s/project", password, host)
+		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
 		conn, err := pgx.Connect(ctx, connStr)
@@ -113,7 +112,7 @@ func DeleteProduct() gin.HandlerFunc {
 			return
 		}
 
-		result, err := conn.Exec(ctx, "DELETE FROM products WHERE product_id = $1", productId)
+		result, err := conn.Exec(ctx, "DELETE FROM products WHERE id = $1", productId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -130,8 +129,8 @@ func DeleteProduct() gin.HandlerFunc {
 func UpdateProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
+		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
+		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
@@ -152,6 +151,16 @@ func UpdateProduct() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No data provided for update"})
 			return
 		}
+		for key, value := range input {
+			if strVal, ok := value.(string); ok && strVal == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Provided empty value for key: %s", key)})
+				return
+			}
+			if value == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Provided nil value for key: %s", key)})
+				return
+			}
+		}
 
 		query := "UPDATE products SET "
 		params := []interface{}{}
@@ -165,9 +174,10 @@ func UpdateProduct() gin.HandlerFunc {
 			params = append(params, value)
 			paramID++
 		}
-		query += fmt.Sprintf(" WHERE product_id = $%d", paramID)
+		query += fmt.Sprintf(" WHERE id = $%d", paramID)
 		params = append(params, productId)
-
+		fmt.Println("Query: ", query)
+		fmt.Print("Params: ", params)
 		result, err := conn.Exec(ctx, query, params...)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
@@ -186,7 +196,7 @@ func InsertProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
 		_ = godotenv.Load()
-		password, port, host := os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL"), os.Getenv("IP2")
+		password, port, host := os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL"), os.Getenv("IP3")
 		if port == "" {
 			port = "5432"
 		}
@@ -209,7 +219,16 @@ func InsertProduct() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "No data provided for update"})
 			return
 		}
-
+		for key, value := range input {
+			if strVal, ok := value.(string); ok && strVal == "" {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Provided empty value for key: %s", key)})
+				return
+			}
+			if value == nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Provided nil value for key: %s", key)})
+				return
+			}
+		}
 		query := "INSERT INTO products (product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at) "
 		location := time.FixedZone("UTC+5", 5*60*60)
 		created_at := time.Now().In(location).Format(time.RFC3339)
