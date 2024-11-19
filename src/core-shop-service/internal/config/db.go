@@ -8,6 +8,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/jackc/pgx/v4"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -30,4 +32,15 @@ func DBconn() {
 
 	fmt.Print("Seccessfully connected to PostGRE !!!")
 
+}
+
+func GetDBConnection(ctx context.Context) (*pgx.Conn, error) {
+	host := os.Getenv("IP_SQL")
+	password := os.Getenv("SQL_PASS")
+	port := os.Getenv("PORT_SQL")
+	if port == "" {
+		port = "5432"
+	}
+	connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
+	return pgx.Connect(ctx, connStr)
 }

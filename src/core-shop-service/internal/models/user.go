@@ -9,7 +9,7 @@ const (
 )
 
 type CLient struct {
-	ID           *string `json:"client_id" validate:"required"`
+	ID           *int    `json:"client_id" validate:"required"`
 	Name         *string `json:"client_name" validate:"required, min=5, max=100"`
 	LastName     *string `json:"client_last_name" validate:"required, min=5, max=100"`
 	Email        *string `json:"client_email" validate:"required, min=5,max=100"`

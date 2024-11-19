@@ -4,33 +4,28 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
+	"strconv"
 	"time"
 
+	"github.com/core/shop/golang/internal/config"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
-	_ "github.com/jackc/pgx/v4/stdlib"
-	_ "github.com/lib/pq"
 )
 
 func GetUsers() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host := os.Getenv("HOST_SQL")
-		password := os.Getenv("SQL_PASS")
-
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		connect := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connect)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Failed to connect to the database"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to the database"})
 			return
 		}
 		defer conn.Close(ctx)
 
-		rows, err := conn.Query(ctx, "SELECT * FROM clients")
+		rows, err := conn.Query(ctx, "SELECT client_id, client_name, client_last_name, client_email, client_phone, client_type, token, refresh_token FROM clients")
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -69,19 +64,25 @@ func GetUsers() gin.HandlerFunc {
 func GetUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-		defer cancel()
-		conn, err := pgx.Connect(ctx, connStr)
+
+		id, err := strconv.Atoi(userId)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error with connecting to database..."})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		conn, err := config.GetDBConnection(ctx)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to the database"})
 			return
 		}
 		defer conn.Close(ctx)
 
 		var user models.CLient
-		err = conn.QueryRow(ctx, "SELECT client_id,client_name, client_last_name, client_email, client_phone, client_type,token, refresh_token FROM clients WHERE client_id = 1$", userId).Scan(
+		err = conn.QueryRow(ctx, "SELECT client_id, client_name, client_last_name, client_email, client_phone, client_type, token, refresh_token FROM clients WHERE client_id = $1", id).Scan(
 			&user.ID,
 			&user.Name,
 			&user.LastName,
@@ -92,7 +93,11 @@ func GetUser() gin.HandlerFunc {
 			&user.RefreshToken,
 		)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			if err == pgx.ErrNoRows {
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			}
 			return
 		}
 
@@ -103,18 +108,21 @@ func GetUser() gin.HandlerFunc {
 func DeleteUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
+		Id, err := strconv.Atoi(userId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
 		defer conn.Close(ctx)
 
-		result, err := conn.Exec(ctx, "DELETE FROM clients WHERE client_id = $1", userId)
+		result, err := conn.Exec(ctx, "DELETE FROM clients WHERE client_id = $1", Id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -131,31 +139,18 @@ func DeleteUser() gin.HandlerFunc {
 func UpdateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("user_id")
-		adminID := c.GetHeader("AdminID")
-
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
+		Id, err := strconv.Atoi(userId)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+			return
+		}
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		}
-		var role string
-		err = conn.QueryRow(ctx, "SELECT client_type FROM clients WHERE client_id = $1", adminID).Scan(&role)
-		if err != nil {
-			if err == pgx.ErrNoRows {
-				c.JSON(http.StatusForbidden, gin.H{"error": "No client found with the specified Admin ID"})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error querying admin role"})
-			}
-			return
-		}
 		defer conn.Close(ctx)
-		if role != "ADMIN" {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "You have no rights for this action!"})
-			return
-		}
 
 		var input map[string]interface{}
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -176,7 +171,7 @@ func UpdateUser() gin.HandlerFunc {
 			paramID++
 		}
 		query += fmt.Sprintf(" WHERE client_id = $%d", paramID)
-		params = append(params, userId)
+		params = append(params, Id)
 
 		result, err := conn.Exec(ctx, query, params...)
 		if err != nil {

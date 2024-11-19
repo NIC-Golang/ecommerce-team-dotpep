@@ -4,22 +4,19 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
+	"github.com/core/shop/golang/internal/config"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4"
-	"github.com/joho/godotenv"
 )
 
 func GetProducts() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		host, password, port := os.Getenv("IP3"), os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL")
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
 			return
@@ -65,11 +62,9 @@ func GetProducts() gin.HandlerFunc {
 func GetProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -102,11 +97,9 @@ func GetProduct() gin.HandlerFunc {
 func DeleteProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 		defer cancel()
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -129,12 +122,10 @@ func DeleteProduct() gin.HandlerFunc {
 func UpdateProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productId := c.Param("product_id")
-		password, host, port := os.Getenv("SQL_PASS"), os.Getenv("IP3"), os.Getenv("PORT_SQL")
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
 			return
@@ -165,7 +156,9 @@ func UpdateProduct() gin.HandlerFunc {
 		query := "UPDATE products SET "
 		params := []interface{}{}
 		paramID := 1
-
+		location := time.FixedZone("UTC+5", 5*60*60)
+		updatedAt := time.Now().In(location).Format(time.RFC3339)
+		input["product_updated_at"] = updatedAt
 		for key, value := range input {
 			if paramID > 1 {
 				query += ", "
@@ -174,10 +167,9 @@ func UpdateProduct() gin.HandlerFunc {
 			params = append(params, value)
 			paramID++
 		}
+
 		query += fmt.Sprintf(" WHERE id = $%d", paramID)
 		params = append(params, productId)
-		fmt.Println("Query: ", query)
-		fmt.Print("Params: ", params)
 		result, err := conn.Exec(ctx, query, params...)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Update failed"})
@@ -195,15 +187,9 @@ func UpdateProduct() gin.HandlerFunc {
 func InsertProduct() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
-		_ = godotenv.Load()
-		password, port, host := os.Getenv("SQL_PASS"), os.Getenv("PORT_SQL"), os.Getenv("IP3")
-		if port == "" {
-			port = "5432"
-		}
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project?sslmode=disable", password, host, port)
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to connect to database"})
 			return
