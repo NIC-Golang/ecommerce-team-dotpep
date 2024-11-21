@@ -37,6 +37,7 @@ func GetProducts() gin.HandlerFunc {
 				&product.ID,
 				&product.Name,
 				&product.Description,
+				&product.CategoryID,
 				&product.Price,
 				&product.SKU,
 				&product.Quantity,
@@ -71,10 +72,11 @@ func GetProduct() gin.HandlerFunc {
 		}
 		defer conn.Close(ctx)
 		var product models.Product
-		err = conn.QueryRow(ctx, "SELECT id, product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at FROM products WHERE id = $1", productId).Scan(
+		err = conn.QueryRow(ctx, "SELECT id, product_name, product_description, category_id, product_price, product_sku, product_quantity, product_created_at, product_updated_at FROM products WHERE id = $1", productId).Scan(
 			&product.ID,
 			&product.Name,
 			&product.Description,
+			&product.CategoryID,
 			&product.Price,
 			&product.SKU,
 			&product.Quantity,
@@ -215,14 +217,16 @@ func InsertProduct() gin.HandlerFunc {
 				return
 			}
 		}
-		query := "INSERT INTO products (product_name, product_description, product_price, product_sku, product_quantity, product_created_at, product_updated_at) "
+		query := "INSERT INTO products (product_name, product_description, category_id, product_price, product_sku, product_quantity, product_created_at, product_updated_at) "
 		location := time.FixedZone("UTC+5", 5*60*60)
 		created_at := time.Now().In(location).Format(time.RFC3339)
 		updated_at := time.Now().In(location).Format(time.RFC3339)
-		values := "VALUES ($1, $2, $3, $4, $5, $6, $7)"
-		var params []interface{}
-		params = append(params, input["product_name"], input["product_description"], input["product_price"], input["product_sku"], input["product_quantity"], created_at, updated_at)
-
+		values := "VALUES ($1, $2, $3, $4, $5, $6, $7, &8)"
+		params := []interface{}{
+			input["product_name"], input["product_description"], input["category_id"],
+			input["product_price"], input["product_sku"], input["product_quantity"],
+			created_at, updated_at,
+		}
 		result, err := conn.Exec(ctx, query+values, params...)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Failed to insert product: %v", err)})

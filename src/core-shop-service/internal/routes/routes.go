@@ -6,11 +6,14 @@ import (
 )
 
 func ProductManager(approachingRoute *gin.Engine) {
-	approachingRoute.GET("products", repositories.GetProducts())
-	approachingRoute.GET("products/:product_id", repositories.GetProduct())
-	approachingRoute.POST("products", repositories.InsertProduct())
-	approachingRoute.PUT("products/:product_id", repositories.UpdateProduct())
-	approachingRoute.DELETE("products/:product_id", repositories.DeleteProduct())
+	productRoutes := approachingRoute.Group("/products")
+	{
+		productRoutes.GET("", repositories.GetProducts())
+		productRoutes.GET("/:product_id", repositories.GetProduct())
+		productRoutes.POST("", repositories.InsertProduct())
+		productRoutes.PUT("/:product_id", repositories.UpdateProduct())
+		productRoutes.DELETE("/:product_id", repositories.DeleteProduct())
+	}
 }
 
 func OrdersManager(approachingRoute *gin.Engine) {
@@ -21,8 +24,20 @@ func OrdersManager(approachingRoute *gin.Engine) {
 }
 
 func UserManager(approachingRoute *gin.Engine) {
-	approachingRoute.GET("users", repositories.GetUsers())
-	approachingRoute.GET("users/:user_id", repositories.GetUser())
-	approachingRoute.PUT("users/:user_id", repositories.UpdateUser())
-	approachingRoute.DELETE("users/:user_id", repositories.DeleteUser())
+	userRoutes := approachingRoute.Group("/users")
+	{
+		userRoutes.GET("", repositories.GetUsers())
+		userRoutes.GET("/:user_id", repositories.GetUser())
+		userRoutes.PUT("/:user_id", repositories.UpdateUser())
+		userRoutes.DELETE("/:user_id", repositories.DeleteUser())
+	}
+}
+
+func CategoryManager(approachingRoute *gin.Engine) {
+	categoryRoutes := approachingRoute.Group("/categories")
+	{
+		categoryRoutes.GET("", repositories.GetCategories())
+		categoryRoutes.POST("", repositories.CreateCategory())
+		categoryRoutes.DELETE("/:id", repositories.DeleteCategory())
+	}
 }
