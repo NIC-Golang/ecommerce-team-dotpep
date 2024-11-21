@@ -36,6 +36,7 @@ func UserManager(approachingRoute *gin.Engine) {
 func CategoryManager(approachingRoute *gin.Engine) {
 	categoryRoutes := approachingRoute.Group("/categories")
 	{
+		categoryRoutes.GET("/:id", repositories.GetCategory())
 		categoryRoutes.GET("", repositories.GetCategories())
 		categoryRoutes.POST("", repositories.CreateCategory())
 		categoryRoutes.DELETE("/:id", repositories.DeleteCategory())

@@ -221,7 +221,7 @@ func InsertProduct() gin.HandlerFunc {
 		location := time.FixedZone("UTC+5", 5*60*60)
 		created_at := time.Now().In(location).Format(time.RFC3339)
 		updated_at := time.Now().In(location).Format(time.RFC3339)
-		values := "VALUES ($1, $2, $3, $4, $5, $6, $7, &8)"
+		values := "VALUES ($1, $2, $3, $4, $5, $6, $7, $8)"
 		params := []interface{}{
 			input["product_name"], input["product_description"], input["category_id"],
 			input["product_price"], input["product_sku"], input["product_quantity"],

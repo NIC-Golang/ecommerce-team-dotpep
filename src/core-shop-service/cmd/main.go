@@ -34,6 +34,7 @@ func main() {
 	routes.ProductManager(router)
 	routes.OrdersManager(router)
 	routes.UserManager(router)
+	routes.CategoryManager(router)
 
 	router.GET("/api-1", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-1!"})
