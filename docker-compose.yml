@@ -1,0 +1,18 @@
+version: "3.9"
+services:
+  core-shop-service:
+    build:
+      context: .
+      dockerfile: ./src/core-shop-service/Dockerfile
+    ports:
+      - "8080:8080"  
+    volumes:
+      - .:/app      
+    working_dir: /cmd 
+    command: ["./main"]
+
+
+  #scraper-and-ai-service:
+    # continue 
+  #user-auth-service:
+    # continue

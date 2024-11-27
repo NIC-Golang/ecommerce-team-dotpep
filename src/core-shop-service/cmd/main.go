@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 
 	//"github.com/core/shop/golang/internal/middleware"
@@ -36,13 +35,6 @@ func main() {
 	routes.UserManager(router)
 	routes.CategoryManager(router)
 
-	router.GET("/api-1", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-1!"})
-	})
-
-	router.GET("/api-2", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"success": "You successfully on api-2!"})
-	})
 	if err := router.Run(ipAddress + ":" + port); err != nil {
 		if err := router.Run(ipAddress1 + ":" + port); err != nil {
 			if err := router.Run(ipAddress2 + ":" + port); err != nil {
