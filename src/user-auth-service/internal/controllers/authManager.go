@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"go/auth-service/internal/config"
+	"go/auth-service/internal/helpers"
 	"go/auth-service/internal/models"
 	"net/http"
 	"time"
@@ -16,7 +17,7 @@ import (
 var userCollection *mongo.Collection = config.GetCollection(config.DB, "users")
 var validate = validator.New()
 
-func Login() gin.HandlerFunc {
+func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
@@ -34,6 +35,7 @@ func Login() gin.HandlerFunc {
 		}
 		userType := "USER"
 		localzone := time.FixedZone("UTC+5", 5*60*60)
+		token, refreshToken, err := helpers.CreateToken(*user.Email, *user.Name, *user.Type)
 		newUser := models.User{
 			ID:           primitive.NewObjectID(),
 			Name:         user.Name,
@@ -41,8 +43,8 @@ func Login() gin.HandlerFunc {
 			Phone:        user.Phone,
 			Password:     user.Password,
 			Type:         &userType,
-			Token:        "asgasgasg",
-			RefreshToken: "awgasg",
+			Token:        token,
+			RefreshToken: refreshToken,
 			Created_at:   time.Now().In(localzone),
 			Updated_at:   time.Now().In(localzone),
 		}
