@@ -5,6 +5,7 @@ import (
 	"go/auth-service/internal/config"
 	"go/auth-service/internal/helpers"
 	"go/auth-service/internal/models"
+	"log"
 	"net/http"
 	"time"
 
@@ -36,6 +37,10 @@ func SignUp() gin.HandlerFunc {
 		userType := "USER"
 		localzone := time.FixedZone("UTC+5", 5*60*60)
 		token, refreshToken, err := helpers.CreateToken(*user.Email, *user.Name, *user.Type)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
 		newUser := models.User{
 			ID:           primitive.NewObjectID(),
 			Name:         user.Name,

@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v5"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -14,7 +14,7 @@ type SignedDetails struct {
 	Email    string
 	Name     string
 	UserType string
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 var userCollection *mongo.Collection = config.GetCollection(config.DB, "user")
@@ -25,24 +25,26 @@ func CreateToken(email, name, userType string) (tokenWithClaims, refreshTokenWit
 		Email:    email,
 		Name:     name,
 		UserType: userType,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * 24).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Установка времени истечения токена
 		},
 	}
 
 	refreshClaims := SignedDetails{
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Local().Add(time.Hour * 168).Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(168 * time.Hour)), // Установка времени истечения refresh токена
 		},
 	}
 
-	tokenWithClaims, err = jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(key))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenWithClaims, err = token.SignedString([]byte(key))
 	if err != nil {
 		log.Panic(err)
 		return
 	}
 
-	refreshTokenWithClaims, err = jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims).SignedString([]byte(key))
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	refreshTokenWithClaims, err = refreshToken.SignedString([]byte(key))
 	if err != nil {
 		log.Panic(err)
 		return
