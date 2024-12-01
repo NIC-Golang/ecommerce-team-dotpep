@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -28,7 +29,10 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(http.StatusOK, gin.H{"error": err.Error()})
 			return
 		}
-
+		if user.Type == nil || *user.Type == "" {
+			defaultType := "USER"
+			user.Type = &defaultType
+		}
 		validationErr := validate.Struct(&user)
 		if validationErr != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": validationErr.Error()})
@@ -41,12 +45,14 @@ func SignUp() gin.HandlerFunc {
 			log.Fatal(err)
 			return
 		}
+		hashedPass := helpers.HashPassword(*user.Password)
 		newUser := models.User{
 			ID:           primitive.NewObjectID(),
+			User_id:      user.ID.Hex(),
 			Name:         user.Name,
 			Email:        user.Email,
 			Phone:        user.Phone,
-			Password:     user.Password,
+			Password:     &hashedPass,
 			Type:         &userType,
 			Token:        token,
 			RefreshToken: refreshToken,
@@ -61,5 +67,42 @@ func SignUp() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusCreated, resultInsertionNumber)
+	}
+}
+
+func Login() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var user models.User
+		var foundUser models.User
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+		defer cancel()
+		if err := c.BindJSON(&user); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(),
+				"message": "There was some error with scanning data..."})
+			return
+		}
+		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		passwordIsValid, msg := helpers.VerifyingOfPassword(*user.Password, *foundUser.Password)
+		if !passwordIsValid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
+			return
+		}
+		token, refreshToken, err := helpers.CreateToken(*foundUser.Email, *foundUser.Name, *foundUser.Type)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating JWT"})
+			return
+		}
+
+		if err := helpers.UpdateTokens(token, refreshToken, foundUser.User_id); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tokens"})
+			return
+		}
+
+		c.JSON(http.StatusOK, foundUser)
+
 	}
 }

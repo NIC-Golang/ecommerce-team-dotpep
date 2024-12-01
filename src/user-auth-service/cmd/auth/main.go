@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
+	err := godotenv.Load("C:/Users/user/source/golang-github-project/ecommerce-team-dotpep/src/user-auth-service/.env")
 	if err != nil {
 		fmt.Print("error with loading .env file...")
 	}
@@ -21,15 +21,21 @@ func main() {
 		port = "8000"
 	}
 
-	ipAdress1, apAdress2, ipAdress3 := os.Getenv("IP1"), os.Getenv("IP2"), os.Getenv("IP3")
-	err = router.SetTrustedProxies([]string{ipAdress1, apAdress2, ipAdress3})
+	ipAdress1, ipAdress2, ipAdress3 := os.Getenv("IP1"), os.Getenv("IP2"), os.Getenv("IP3")
+	err = router.SetTrustedProxies([]string{ipAdress1, ipAdress2, ipAdress3})
 	if err != nil {
 		log.Fatal(err)
 	}
 	routes.AuthintificateRoute(router)
 	routes.UserManager(router)
 	if err := router.Run(ipAdress1 + ":" + port); err != nil {
-		fmt.Print("Trying to run the server...")
-		log.Fatal(err)
+		fmt.Printf("Trying to run the server on port %s..", ipAdress1)
+		if err := router.Run(ipAdress2 + ":" + port); err != nil {
+			fmt.Printf("Trying to run the server on port %s..", ipAdress2)
+			if err := router.Run(ipAdress3 + ":" + port); err != nil {
+				fmt.Printf("Trying to run the server on port %s..", ipAdress3)
+				log.Fatal(err)
+			}
+		}
 	}
 }
