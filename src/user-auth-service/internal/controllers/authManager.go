@@ -40,7 +40,7 @@ func SignUp() gin.HandlerFunc {
 		}
 		userType := "USER"
 		localzone := time.FixedZone("UTC+5", 5*60*60)
-		token, refreshToken, err := helpers.CreateToken(*user.Email, *user.Name, *user.Type)
+		token, refreshToken, err := helpers.CreateToken(*user.Email, *user.Name, *user.Type, user.User_id)
 		if err != nil {
 			log.Fatal(err)
 			return
@@ -91,7 +91,7 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
 			return
 		}
-		token, refreshToken, err := helpers.CreateToken(*foundUser.Email, *foundUser.Name, *foundUser.Type)
+		token, refreshToken, err := helpers.CreateToken(*foundUser.Email, *foundUser.Name, *foundUser.Type, foundUser.User_id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating JWT"})
 			return

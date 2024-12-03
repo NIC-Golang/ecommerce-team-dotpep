@@ -1,6 +1,9 @@
 package routes
 
 import (
+	"go/auth-service/internal/controllers"
+	"go/auth-service/internal/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,7 +11,7 @@ func UserManager(aproachingRoute *gin.Engine) {
 	userRoutes := aproachingRoute.Group("/users")
 	{
 		userRoutes.Use(middleware.Authentification())
-		userRoutes.GET("", repositories.GetAll())
-		userRoutes.GET("/:id", repositories.GetUser())
+		userRoutes.GET("", controllers.GetAll())
+		userRoutes.GET("/:id", controllers.GetUser())
 	}
 }
