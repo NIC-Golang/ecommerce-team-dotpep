@@ -1,8 +1,19 @@
 package helpers
 
 import (
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+func CheckType(c *gin.Context, userId string) string {
+	uid := c.GetString("uid")
+	userType := c.GetString("user_type")
+	if userType == "ADMIN" && uid != userId {
+		return ""
+	} else {
+		return "Unauthorized access to the server"
+	}
+}
 
 func HashPassword(password string) string {
 	hashed, _ := bcrypt.GenerateFromPassword([]byte(password), 14)
