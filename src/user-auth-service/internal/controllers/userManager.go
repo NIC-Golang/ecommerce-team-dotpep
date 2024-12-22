@@ -44,3 +44,32 @@ func GetUser() gin.HandlerFunc {
 		c.JSON(http.StatusOK, user)
 	}
 }
+
+func GetAll() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
+		defer cancel()
+		var users []models.User
+		cursor, err := userCollection.Find(ctx, bson.M{})
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Error fetching users from the database"})
+			return
+		}
+		defer cursor.Close(ctx)
+
+		for cursor.Next(ctx) {
+			var user models.User
+			if err := cursor.Decode(&user); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error decoding user data"})
+				return
+			}
+			users = append(users, user)
+		}
+		if err := cursor.Err(); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Cursor error"})
+			return
+		}
+
+		c.JSON(http.StatusOK, users)
+	}
+}
