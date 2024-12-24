@@ -5,14 +5,13 @@ services:
       context: .
       dockerfile: ./src/core-shop-service/Dockerfile
     ports:
-      - "8080:8080"  
-    volumes:
-      - .:/app      
-    working_dir: /cmd 
-    command: ["./main"]
+      - "8080:8080"
 
+  user-auth-service:
+    build:
+      context: .
+      dockerfile: ./src/user-auth-service/Dockerfile
+    ports:
+      - "8081:8081"
 
-  #scraper-and-ai-service:
-    # continue 
-  #user-auth-service:
-    # continue
+    
