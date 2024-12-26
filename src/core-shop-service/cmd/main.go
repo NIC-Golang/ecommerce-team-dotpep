@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 
@@ -12,7 +13,7 @@ import (
 
 func main() {
 	//gin.SetMode(gin.ReleaseMode)
-	err := godotenv.Load("C:/Users/user/source/project-go/ecommerce-team-dotpep/src/core-shop-service/.env")
+	err := godotenv.Load("/app/.env")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,9 +37,13 @@ func main() {
 	routes.CategoryManager(router)
 
 	if err := router.Run(ipAddress + ":" + port); err != nil {
+		fmt.Printf("Trying to run server on ip %s ...", ipAddress)
 		if err := router.Run(ipAddress1 + ":" + port); err != nil {
+			fmt.Printf("Trying to run server on ip %s ...", ipAddress1)
 			if err := router.Run(ipAddress2 + ":" + port); err != nil {
+				fmt.Printf("Trying to run server on ip %s ...", ipAddress2)
 				if err := router.Run(ipAddress3 + ":" + port); err != nil {
+					fmt.Printf("Trying to run server on ip %s ...", ipAddress3)
 					log.Fatal("There's some error occured with running the server...")
 				}
 			}

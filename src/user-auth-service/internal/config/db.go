@@ -3,6 +3,7 @@ package config
 import (
 	"context"
 	"log"
+	"os"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -10,14 +11,19 @@ import (
 )
 
 func ConnectMongo() *mongo.Client {
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*10)
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	mongoURI := os.Getenv("MONGO_URL")
+	if mongoURI == "" {
+		log.Fatal("MONGO_URL is not defined")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	clientOptions := options.Client().ApplyURI(mongoURI)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Print("Error with connecting to Mongo!")
 		log.Fatal(err)
 	}
-
+	defer cancel()
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Print("Cannot ping MongoDB!")

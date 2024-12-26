@@ -1,17 +1,46 @@
 version: "3.9"
 services:
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+
   core-shop-service:
     build:
       context: .
       dockerfile: ./src/core-shop-service/Dockerfile
     ports:
-      - "8080:8080"
+      - ${PORT_CORE}
+    env_file:
+      - src/core-shop-service/.env
+    depends_on:
+      - postgres
+    
 
   user-auth-service:
     build:
       context: .
       dockerfile: ./src/user-auth-service/Dockerfile
     ports:
-      - "8081:8081"
+      - ${PORT_AUTH}
+    env_file:
+      - src/user-auth-service/.env
+    depends_on:
+      - mongodb
 
-    
+  postgres:
+    image: postgres:13.3
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASS}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+volumes:
+  postgres_data:

@@ -11,14 +11,14 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("C:/Users/user/source/golang-github-project/ecommerce-team-dotpep/src/user-auth-service/.env")
+	err := godotenv.Load("/app/src/user-auth-service/.env")
 	if err != nil {
 		fmt.Print("error with loading .env file...")
 	}
 	router := gin.Default()
 	port := os.Getenv("ENGINE_PORT")
 	if port == "" {
-		port = "8000"
+		port = "8001"
 	}
 
 	ipAdress1, ipAdress2, ipAdress3 := os.Getenv("IP1"), os.Getenv("IP2"), os.Getenv("IP3")
