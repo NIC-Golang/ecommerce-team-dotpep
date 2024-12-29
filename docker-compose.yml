@@ -8,8 +8,8 @@ services:
 
   core-shop-service:
     build:
-      context: .
-      dockerfile: ./src/core-shop-service/Dockerfile
+      context: ./src/core-shop-service
+      dockerfile: Dockerfile
     ports:
       - ${PORT_CORE}
     env_file:
@@ -20,8 +20,8 @@ services:
 
   user-auth-service:
     build:
-      context: .
-      dockerfile: ./src/user-auth-service/Dockerfile
+      context: ./src/user-auth-service
+      dockerfile: Dockerfile
     ports:
       - ${PORT_AUTH}
     env_file:

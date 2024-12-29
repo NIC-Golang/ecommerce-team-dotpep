@@ -23,7 +23,7 @@ type SignedDetails struct {
 	jwt.RegisteredClaims
 }
 
-var userCollection *mongo.Collection = config.GetCollection(config.DB, "user")
+var userCollection *mongo.Collection = config.GetCollection(config.DB, "users")
 var key = os.Getenv("KEY")
 
 func CreateToken(email, name, userType, userId string) (tokenWithClaims, refreshTokenWithClaims string, err error) {
@@ -33,13 +33,13 @@ func CreateToken(email, name, userType, userId string) (tokenWithClaims, refresh
 		UserType: userType,
 		Uid:      userId,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // Установка времени истечения токена
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 	}
 
 	refreshClaims := SignedDetails{
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(168 * time.Hour)), // Установка времени истечения refresh токена
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(168 * time.Hour)),
 		},
 	}
 

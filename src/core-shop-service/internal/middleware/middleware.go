@@ -23,7 +23,7 @@ func AdminAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		resp, err := http.Post("http://auth-service/validate-token", "application/json", strings.NewReader(authHeader))
+		resp, err := http.Post("http://user-auth-service/validate-token", "application/json", strings.NewReader(authHeader))
 		if err != nil || resp.StatusCode != http.StatusOK {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
 			c.Abort()
