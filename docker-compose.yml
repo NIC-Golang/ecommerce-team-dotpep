@@ -28,6 +28,8 @@ services:
       - src/user-auth-service/.env
     depends_on:
       - mongodb
+    environment:
+      MONGO_URL: ${MONGO}
 
   postgres:
     image: postgres:13.3

@@ -17,13 +17,13 @@ func ConnectMongo() *mongo.Client {
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
 	clientOptions := options.Client().ApplyURI(mongoURI)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
 		log.Print("Error with connecting to Mongo!")
 		log.Fatal(err)
 	}
-	defer cancel()
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		log.Print("Cannot ping MongoDB!")

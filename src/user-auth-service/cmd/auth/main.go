@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load("/app/src/user-auth-service/.env")
+	err := godotenv.Load("/app/.env")
 	if err != nil {
 		fmt.Print("error with loading .env file...")
 	}
