@@ -105,3 +105,30 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 
 	return claims, ""
 }
+
+func ExtractClaimsFromToken(userToken string) (*SignedDetails, error) {
+	secretKey := os.Getenv("SECRET_KEY")
+	if secretKey == "" {
+		return nil, fmt.Errorf("secret key is not set")
+	}
+	token, err := jwt.ParseWithClaims(userToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	claims, ok := token.Claims.(*SignedDetails)
+	if !ok {
+		return nil, fmt.Errorf("invalid token claims")
+	}
+
+	if claims.ExpiresAt.Unix() < time.Now().UTC().Unix() {
+		return nil, fmt.Errorf("token is expired")
+	}
+	if claims.Email == "" || claims.UserType == "" {
+		return nil, fmt.Errorf("missing essential claim data")
+	}
+	return claims, nil
+}

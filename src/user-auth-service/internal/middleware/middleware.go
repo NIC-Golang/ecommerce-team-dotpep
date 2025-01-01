@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"go/auth-service/internal/helpers"
+	"log"
 	"net/http"
 	"strings"
 
@@ -37,10 +38,28 @@ func Authentification() gin.HandlerFunc {
 
 func AdminRoute() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userType, exists := c.Get("user_type")
-		if userType != "ADMIN" || !exists {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "You are not authorized to access this route!"})
-			c.Abort()
+		userToken, exists := c.Get("token")
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
+			return
+		}
+
+		tokenStr, ok := userToken.(string)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+			return
+		}
+
+		log.Printf("Received token: %s", tokenStr)
+
+		claims, err := helpers.ExtractClaimsFromToken(tokenStr)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
+
+		if claims.UserType != "ADMIN" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to access this route!"})
 			return
 		}
 	}
