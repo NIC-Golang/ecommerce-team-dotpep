@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"go/auth-service/internal/config"
-	"log"
 	"os"
 	"time"
 
@@ -16,10 +15,10 @@ import (
 )
 
 type SignedDetails struct {
-	Email    string
-	Name     string
-	UserType string
-	Uid      string
+	Email    string `json:"email"`
+	Name     string `json:"name"`
+	UserType string `json:"user_type"`
+	Uid      string `json:"uid"`
 	jwt.RegisteredClaims
 }
 
@@ -46,15 +45,13 @@ func CreateToken(email, name, userType, userId string) (tokenWithClaims, refresh
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenWithClaims, err = token.SignedString([]byte(key))
 	if err != nil {
-		log.Panic(err)
-		return
+		return "", "", fmt.Errorf("failed to sign access token: %w", err)
 	}
 
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
 	refreshTokenWithClaims, err = refreshToken.SignedString([]byte(key))
 	if err != nil {
-		log.Panic(err)
-		return
+		return "", "", fmt.Errorf("failed to sign refresh token: %w", err)
 	}
 
 	return
@@ -85,25 +82,25 @@ func UpdateTokens(token, refreshToken, userId string) error {
 
 func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 	secretKey := os.Getenv("SECRET_KEY")
-	token, err := jwt.ParseWithClaims(
-		signedToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(secretKey), nil
-		},
-	)
+	if secretKey == "" {
+		return nil, "SECRET_KEY is not set"
+	}
+
+	token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(secretKey), nil
+	})
+
 	if err != nil {
-		msg = err.Error()
-		return
+		return nil, fmt.Sprintf("error parsing token: %v", err)
 	}
 
 	claims, ok := token.Claims.(*SignedDetails)
 	if !ok {
-		msg = "invalid token"
-		return
+		return nil, "invalid token"
 	}
 
-	if claims.ExpiresAt.Unix() < time.Now().Local().Unix() {
-		msg = "token is expired"
-		return
+	if claims.ExpiresAt.Unix() < time.Now().UTC().Unix() {
+		return nil, "token is expired"
 	}
 
 	return claims, ""

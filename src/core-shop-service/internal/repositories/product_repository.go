@@ -18,7 +18,8 @@ func GetProducts() gin.HandlerFunc {
 		defer cancel()
 		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database connection error",
+				"message": err.Error()})
 			return
 		}
 		defer conn.Close(ctx)

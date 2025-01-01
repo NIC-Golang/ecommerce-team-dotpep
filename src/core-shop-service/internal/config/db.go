@@ -41,6 +41,6 @@ func GetDBConnection(ctx context.Context) (*pgx.Conn, error) {
 	if port == "" {
 		port = "5432"
 	}
-	connStr := fmt.Sprintf("postgres://Fiveret:%s@%s:%s/project", password, host, port)
+	connStr := fmt.Sprintf("postgres://fiveret:%s@%s:%s/project", password, host, port)
 	return pgx.Connect(ctx, connStr)
 }

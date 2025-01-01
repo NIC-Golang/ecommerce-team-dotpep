@@ -23,17 +23,17 @@ func AdminAuth() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		resp, err := http.Post("http://user-auth-service/validate-token", "application/json", strings.NewReader(authHeader))
+		resp, err := http.Post("http://user-auth-service:8081/validate-token", "application/json", strings.NewReader(authHeader))
 		if err != nil || resp.StatusCode != http.StatusOK {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 
 		var result map[string]interface{}
 		json.NewDecoder(resp.Body).Decode(&result)
-		role, ok := result["role"].(string)
-		if !ok || role != "admin" {
+		role, ok := result["user_type"].(string)
+		if !ok || role != "ADMIN" {
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access restricted to administrators"})
 			c.Abort()
 			return

@@ -19,7 +19,7 @@ func ProductManager(approachingRoute *gin.Engine) {
 }
 
 func OrdersManager(approachingRoute *gin.Engine) {
-	orderRoutes := approachingRoute.Group("/orsers")
+	orderRoutes := approachingRoute.Group("/orders")
 	{
 		orderRoutes.Use(middleware.AdminAuth())
 		orderRoutes.GET("", repositories.GetOrders())
