@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -81,6 +82,10 @@ func UpdateTokens(token, refreshToken, userId string) error {
 }
 
 func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
+	err := godotenv.Load("/app/.env")
+	if err != nil {
+		return nil, fmt.Sprintf("error loading .env file: %v", err)
+	}
 	secretKey := os.Getenv("SECRET_KEY")
 	if secretKey == "" {
 		return nil, "SECRET_KEY is not set"

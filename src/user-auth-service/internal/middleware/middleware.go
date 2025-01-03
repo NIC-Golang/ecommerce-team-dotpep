@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"go/auth-service/internal/helpers"
-	"log"
 	"net/http"
 	"strings"
 
@@ -36,31 +35,29 @@ func Authentification() gin.HandlerFunc {
 	}
 }
 
+type TokenRequest struct {
+	Token string `json:"token"`
+}
+
 func AdminRoute() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userToken, exists := c.Get("token")
-		if !exists {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token not found"})
+		var tokenReq TokenRequest
+		if err := c.ShouldBindJSON(&tokenReq); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
 			return
 		}
 
-		tokenStr, ok := userToken.(string)
-		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token format"})
+		token := tokenReq.Token
+		if token == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Token missing"})
 			return
 		}
 
-		log.Printf("Received token: %s", tokenStr)
-
-		claims, err := helpers.ExtractClaimsFromToken(tokenStr)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		claims, err := helpers.ValidateToken(token)
+		if err != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 			return
 		}
-
-		if claims.UserType != "ADMIN" {
-			c.JSON(http.StatusForbidden, gin.H{"error": "You are not authorized to access this route!"})
-			return
-		}
+		c.JSON(http.StatusOK, gin.H{"user_type": claims.UserType})
 	}
 }
