@@ -6,4 +6,6 @@ type User struct {
 	WebhookURL string `json:"webhook_url"`
 	Phone      string `json:"phone,omitempty"`
 	CreatedAt  string `json:"created_at,omitempty"`
+	UserType   string `json:"user_type,omitempty"`
+	Timezone   string `json:"timezone,omitempty"`
 }
