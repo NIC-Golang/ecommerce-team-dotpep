@@ -2,11 +2,13 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"go/auth-service/internal/config"
 	"go/auth-service/internal/helpers"
 	"go/auth-service/internal/models"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -65,7 +67,15 @@ func SignUp() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-
+		resp, err := http.Post("http://notifier-service:8082/auth/signup", "application/json", strings.NewReader(fmt.Sprintf(`{"name": "%s", "email": "%s"}`, *user.Name, *user.Email)))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
+			return
+		}
+		if resp.StatusCode != http.StatusOK {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
+			return
+		}
 		c.JSON(http.StatusCreated, resultInsertionNumber)
 	}
 }
@@ -101,7 +111,16 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tokens"})
 			return
 		}
+		resp, err := http.Post("http://notifier-service/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name:%s"}`, *foundUser.Name)))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
+			return
+		}
 
+		if resp.StatusCode != http.StatusOK {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with notifier-service"})
+			return
+		}
 		c.JSON(http.StatusOK, foundUser)
 
 	}
