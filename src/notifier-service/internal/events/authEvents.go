@@ -10,7 +10,7 @@ import (
 )
 
 func SignUpEvent(username, email string) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5673/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	helpers.RabbitError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 	ch, err := conn.Channel()
@@ -36,7 +36,7 @@ func SignUpEvent(username, email string) {
 }
 
 func LoginEvent(username string) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5673/")
+	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	helpers.RabbitError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 	ch, err := conn.Channel()

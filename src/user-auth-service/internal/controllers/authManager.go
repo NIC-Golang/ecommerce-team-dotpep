@@ -111,7 +111,7 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tokens"})
 			return
 		}
-		resp, err := http.Post("http://notifier-service/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name:%s"}`, *foundUser.Name)))
+		resp, err := http.Post("http://notifier-service:8082/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name":"%s"}`, *foundUser.Name)))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
 			return

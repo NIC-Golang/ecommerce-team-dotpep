@@ -5,6 +5,29 @@ services:
     container_name: mongodb
     ports:
       - "27017:27017"
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+    - "5673:5672"
+    - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  notifier-service:
+    build:
+      context: ./src/notifier-service
+      dockerfile: Dockerfile
+    env_file:
+    - src/notifier-service/.env
+    ports:
+      - ${PORT_NOTIFIER}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
 
   core-shop-service:
     build:
@@ -16,7 +39,6 @@ services:
       - src/core-shop-service/.env
     depends_on:
       - postgres
-    
 
   user-auth-service:
     build:
