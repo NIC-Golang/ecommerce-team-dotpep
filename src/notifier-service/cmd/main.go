@@ -19,6 +19,7 @@ func main() {
 	}
 	router.SetTrustedProxies([]string{os.Getenv("IP")})
 	routes.AuthRoutes(router)
+	routes.OrderRoutes(router)
 	if err := router.Run(os.Getenv("IP") + ":" + os.Getenv("PORT")); err != nil {
 		log.Printf("error running the server on ip: %s and port: %s", os.Getenv("IP"), os.Getenv("PORT"))
 	}

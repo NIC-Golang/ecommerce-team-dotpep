@@ -2,14 +2,16 @@ package repositories
 
 import (
 	"context"
-	"fmt"
+	"io"
 	"net/http"
-	"os"
+	"strconv"
+	"strings"
 	"time"
 
+	"github.com/core/shop/golang/internal/config"
+	"github.com/core/shop/golang/internal/helpers"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4"
 	"github.com/joho/godotenv"
 )
 
@@ -19,12 +21,11 @@ func GetOrders() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading .env file"})
 			return
 		}
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
 			return
@@ -90,12 +91,11 @@ func GetOrders() gin.HandlerFunc {
 func GetUsersOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId := c.Param("client_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
 			return
@@ -157,12 +157,10 @@ func GetUsersOrders() gin.HandlerFunc {
 func DeleteOrderByOrderId() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		orderId := c.Param("order_id")
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
 			return
@@ -196,19 +194,31 @@ func DeleteOrderByOrderId() gin.HandlerFunc {
 
 func MakeAnOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		authHeader := c.Request.Header.Get("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
+			c.Abort()
+			return
+		}
+		token, err := helpers.HeaderTrimming(authHeader)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err})
+		}
+		id, err := helpers.GetIdFromToken(token)
+		if err != nil {
+			c.JSON(500, gin.H{"error": err})
+			return
+		}
 		var order models.Order
 		if err := c.ShouldBindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 			return
 		}
 
-		password, host := os.Getenv("SQL_PASS"), os.Getenv("HOST_SQL")
-
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		connStr := fmt.Sprintf("postgres://Fiveret:%s@localhost:%s/project", password, host)
-		conn, err := pgx.Connect(ctx, connStr)
+		conn, err := config.GetDBConnection(ctx)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
 			return
@@ -223,7 +233,7 @@ func MakeAnOrder() gin.HandlerFunc {
 		defer tx.Rollback(ctx)
 
 		query := "INSERT INTO orders (user_id, total_amount, status, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING order_id"
-		err = tx.QueryRow(ctx, query, order.UserID, order.TotalAmount, order.Status).Scan(&order.ID)
+		err = tx.QueryRow(ctx, query, id, order.TotalAmount, order.Status).Scan(&order.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting order"})
 			return
@@ -242,7 +252,17 @@ func MakeAnOrder() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error committing transaction"})
 			return
 		}
-
+		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+strconv.Itoa(order.ID)+`"}`))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to notifier-service"})
+			return
+		}
+		if resp.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp.Body)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with notifier-service", "details": string(body)})
+			return
+		}
+		resp.Body.Close()
 		c.JSON(http.StatusCreated, gin.H{"message": "Order created successfully", "order_id": order.ID})
 	}
 }

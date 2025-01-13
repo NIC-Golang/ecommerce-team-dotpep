@@ -16,5 +16,6 @@ func AuthintificateRoute(approachingRoute *gin.Engine) {
 	appRoutes := approachingRoute.Group("/validate-token")
 	{
 		appRoutes.POST("", middleware.AdminRoute())
+		appRoutes.POST("/id-taking", middleware.TakeIdFromToken())
 	}
 }

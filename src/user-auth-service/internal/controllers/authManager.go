@@ -6,6 +6,7 @@ import (
 	"go/auth-service/internal/config"
 	"go/auth-service/internal/helpers"
 	"go/auth-service/internal/models"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -41,7 +42,7 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 		userType := "USER"
-		localzone := time.FixedZone("UTC+5", 5*60*60)
+		localzone, _ := time.LoadLocation("Asia/Almaty")
 		token, refreshToken, err := helpers.CreateToken(*user.Email, *user.Name, *user.Type, user.User_id)
 		if err != nil {
 			log.Fatal(err)
@@ -50,7 +51,7 @@ func SignUp() gin.HandlerFunc {
 		hashedPass := helpers.HashPassword(*user.Password)
 		newUser := models.User{
 			ID:           primitive.NewObjectID(),
-			User_id:      user.ID.Hex(),
+			User_id:      primitive.NewObjectID().Hex(),
 			Name:         user.Name,
 			Email:        user.Email,
 			Phone:        user.Phone,
@@ -64,7 +65,7 @@ func SignUp() gin.HandlerFunc {
 
 		resultInsertionNumber, err := userCollection.InsertOne(ctx, newUser)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user: " + err.Error()})
 			return
 		}
 		resp, err := http.Post("http://notifier-service:8082/auth/signup", "application/json", strings.NewReader(fmt.Sprintf(`{"name": "%s", "email": "%s"}`, *user.Name, *user.Email)))
@@ -73,7 +74,11 @@ func SignUp() gin.HandlerFunc {
 			return
 		}
 		if resp.StatusCode != http.StatusOK {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
+			body, _ := io.ReadAll(resp.Body)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error":   "Notifier-service returned an error",
+				"details": string(body),
+			})
 			return
 		}
 		c.JSON(http.StatusCreated, resultInsertionNumber)
@@ -86,21 +91,27 @@ func Login() gin.HandlerFunc {
 		var foundUser models.User
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 		defer cancel()
+
 		if err := c.BindJSON(&user); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(),
-				"message": "There was some error with scanning data..."})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error(), "message": "There was an error with scanning data..."})
 			return
 		}
+
 		err := userCollection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err.Error()})
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+				return
+			}
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		passwordIsValid, msg := helpers.VerifyingOfPassword(*user.Password, *foundUser.Password)
 		if !passwordIsValid {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": msg})
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials", "message": msg})
 			return
 		}
+
 		token, refreshToken, err := helpers.CreateToken(*foundUser.Email, *foundUser.Name, *foundUser.Type, foundUser.User_id)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating JWT"})
@@ -111,6 +122,7 @@ func Login() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update tokens"})
 			return
 		}
+
 		resp, err := http.Post("http://notifier-service:8082/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name":"%s"}`, *foundUser.Name)))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
@@ -118,10 +130,11 @@ func Login() gin.HandlerFunc {
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with notifier-service"})
+			body, _ := io.ReadAll(resp.Body)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with notifier-service", "details": string(body)})
 			return
 		}
-		c.JSON(http.StatusOK, foundUser)
 
+		c.JSON(http.StatusOK, foundUser)
 	}
 }

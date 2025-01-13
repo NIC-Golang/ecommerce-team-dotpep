@@ -13,3 +13,10 @@ func AuthRoutes(incomingRoute *gin.Engine) {
 	}
 
 }
+
+func OrderRoutes(incomingRoute *gin.Engine) {
+	orderEventRoute := incomingRoute.Group("/orders")
+	{
+		orderEventRoute.POST("", repositories.OrderCreating())
+	}
+}

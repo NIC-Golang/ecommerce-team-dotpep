@@ -61,3 +61,20 @@ func AdminRoute() gin.HandlerFunc {
 		c.JSON(http.StatusOK, gin.H{"user_type": claims.UserType})
 	}
 }
+
+func TakeIdFromToken() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var tokenReq TokenRequest
+		if err := c.ShouldBindJSON(&tokenReq); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode response"})
+			return
+		}
+		token := tokenReq.Token
+		claims, err := helpers.ValidateToken(token)
+		if err != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"id": claims.Uid})
+	}
+}
