@@ -5,6 +5,7 @@
 - User Auth service
 - Core Shop service
 - Scraper and AI service
+- Notifier service
 
 ---
 
@@ -37,7 +38,7 @@
 - User Authentication/Authorization with `JWT`, sending confirmation code via `SMTP` email.
 - Password Recovery/Reset feature (Forgot Password) and it will send email to recovery/reset and set new password.
 - Server Side cache storing for Auth in `Redis`, login expiration session date or time.
-- Database `MongoDB` or `PostgreSQL`
+- Database `MongoDB`
 
 ---
 

@@ -12,16 +12,10 @@ import (
 	"github.com/core/shop/golang/internal/helpers"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
-	"github.com/joho/godotenv"
 )
 
 func GetOrders() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if err := godotenv.Load(); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error loading .env file"})
-			return
-		}
-
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
