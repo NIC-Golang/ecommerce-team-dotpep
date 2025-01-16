@@ -75,6 +75,6 @@ func TakeIdFromToken() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"id": claims.Uid})
+		c.JSON(http.StatusOK, gin.H{"id": claims.Uid, "email": claims.Email})
 	}
 }

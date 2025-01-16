@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/notifier-service/internal/consumer"
 	"github.com/notifier-service/internal/helpers"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -33,9 +34,10 @@ func SignUpEvent(username, email string) {
 		Body:        []byte(body),
 	})
 	helpers.RabbitError(err, "Failed to publish a message")
+	consumer.AuthConsumer(email, q.Name)
 }
 
-func LoginEvent(username string) {
+func LoginEvent(username, email string) {
 	conn, err := amqp.Dial("amqp://guest:guest@rabbitmq:5672/")
 	helpers.RabbitError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
@@ -63,4 +65,5 @@ func LoginEvent(username string) {
 			ContentType: "text/plain",
 			Body:        []byte(body)})
 	helpers.RabbitError(err, "Failed to publish a message")
+	consumer.AuthConsumer(email, q.Name)
 }

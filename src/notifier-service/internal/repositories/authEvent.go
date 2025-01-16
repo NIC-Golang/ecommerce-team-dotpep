@@ -34,6 +34,6 @@ func Login() gin.HandlerFunc {
 			c.JSON(400, gin.H{"error": "name is required"})
 			return
 		}
-		events.LoginEvent(loginUser.Name)
+		events.LoginEvent(loginUser.Name, loginUser.Email)
 	}
 }

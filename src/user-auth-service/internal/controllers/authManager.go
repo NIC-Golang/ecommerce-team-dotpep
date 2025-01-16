@@ -123,7 +123,7 @@ func Login() gin.HandlerFunc {
 			return
 		}
 
-		resp, err := http.Post("http://notifier-service:8082/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name":"%s"}`, *foundUser.Name)))
+		resp, err := http.Post("http://notifier-service:8082/auth/login", "application/json", strings.NewReader(fmt.Sprintf(`{"name": "%s", "email": "%s"}`, *foundUser.Name, *foundUser.Email)))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send request to notifier-service"})
 			return

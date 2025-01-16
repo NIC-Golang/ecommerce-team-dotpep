@@ -198,7 +198,7 @@ func MakeAnOrder() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(500, gin.H{"error": err})
 		}
-		id, err := helpers.GetIdFromToken(token)
+		id, email, err := helpers.GetIdAndEmailFromToken(token)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err})
 			return
@@ -246,7 +246,7 @@ func MakeAnOrder() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error committing transaction"})
 			return
 		}
-		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+strconv.Itoa(order.ID)+`"}`))
+		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+strconv.Itoa(order.ID)+`", "email":"`+email+`"}`))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to notifier-service"})
 			return
