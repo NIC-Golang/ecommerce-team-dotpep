@@ -4,11 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/notifier-service/internal/models"
 )
-
-type order struct {
-	Id string `json:"order_id"`
-}
 
 func OrderCreating() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -17,12 +14,12 @@ func OrderCreating() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": "Name not found in context"})
 			return
 		}
-		var order order
+		var order models.Order
 		err := c.ShouldBindJSON(&order)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(200, gin.H{"message": fmt.Sprintf("%s , your order created successfully, here's your order id: %s", name, order.Id)})
+		c.JSON(200, gin.H{"message": fmt.Sprintf("%s , your order created successfully, here's your order id: %d", name, order.ID)})
 	}
 }

@@ -1,11 +1,12 @@
 package models
 
 type User struct {
-	ID         string `json:"id,omitempty"`
-	Email      string `json:"email,omitempty"`
+	ID         string `json:"id"`
+	Name       string `json:"name"`
+	Email      string `json:"email"`
 	WebhookURL string `json:"webhook_url"`
-	Phone      string `json:"phone,omitempty"`
-	CreatedAt  string `json:"created_at,omitempty"`
-	UserType   string `json:"user_type,omitempty"`
-	Timezone   string `json:"timezone,omitempty"`
+	Phone      string `json:"phone"`
+	CreatedAt  string `json:"created_at"`
+	UserType   string `json:"user_type"`
+	Timezone   string `json:"timezone"`
 }

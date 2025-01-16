@@ -3,16 +3,12 @@ package repositories
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/notifier-service/internal/events"
+	"github.com/notifier-service/internal/models"
 )
-
-type User struct {
-	Name  string `json:"name"`
-	Email string `json:"email"`
-}
 
 func SignUp() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var user User
+		var user models.User
 		err := c.ShouldBindJSON(&user)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
@@ -28,7 +24,7 @@ func SignUp() gin.HandlerFunc {
 
 func Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var loginUser User
+		var loginUser models.User
 		err := c.ShouldBindJSON(&loginUser)
 		if err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
