@@ -52,6 +52,17 @@ services:
       - mongodb
     environment:
       MONGO_URL: ${MONGO}
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
 
   postgres:
     image: postgres:13.3
@@ -64,7 +75,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5434:5432"
+      - "5432:5432"
 
 volumes:
   postgres_data:

@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/core/shop/golang/cmd/migrations"
 	"github.com/core/shop/golang/internal/middleware"
 	"github.com/core/shop/golang/internal/routes"
 	"github.com/gin-gonic/gin"
@@ -13,6 +14,9 @@ import (
 
 func main() {
 	//gin.SetMode(gin.ReleaseMode)
+	if err := migrations.RunMigrations(); err != nil {
+		log.Fatal(err)
+	}
 	err := godotenv.Load("/app/.env")
 	if err != nil {
 		log.Fatal(err)
