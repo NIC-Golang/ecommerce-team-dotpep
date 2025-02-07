@@ -1,6 +1,8 @@
 package consumer
 
 import (
+	"fmt"
+
 	"github.com/notifier-service/internal/helpers"
 	"github.com/notifier-service/internal/sender"
 )
@@ -24,6 +26,6 @@ func OrderConsumer(email, queue string) {
 		body := string(msg.Body)
 		subject := "Successful creating of order!"
 		err := sender.SendEmail(email, subject, body)
-		helpers.RabbitError(err, "Failed to send email")
+		fmt.Println("Failed to send an email: ", err)
 	}
 }

@@ -15,7 +15,7 @@ import (
 func main() {
 	//gin.SetMode(gin.ReleaseMode)
 	if err := migrations.RunMigrations(); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 	err := godotenv.Load("/app/.env")
 	if err != nil {

@@ -26,6 +26,6 @@ func AuthConsumer(email, queue string) {
 		body := string(msg.Body)
 		subject := fmt.Sprintf("Successful %s", q.Name)
 		err := sender.SendEmail(email, subject, body)
-		helpers.RabbitError(err, "Failed to send email")
+		fmt.Println("Failed to send an email: ", err)
 	}
 }

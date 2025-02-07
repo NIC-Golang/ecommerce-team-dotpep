@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/notifier-service/internal/consumer"
+	//"github.com/notifier-service/internal/consumer"
 	"github.com/notifier-service/internal/helpers"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -34,7 +34,7 @@ func SignUpEvent(username, email string) {
 		Body:        []byte(body),
 	})
 	helpers.RabbitError(err, "Failed to publish a message")
-	consumer.AuthConsumer(email, q.Name)
+	//consumer.AuthConsumer(email, q.Name)
 }
 
 func LoginEvent(username, email string) {
@@ -65,5 +65,5 @@ func LoginEvent(username, email string) {
 			ContentType: "text/plain",
 			Body:        []byte(body)})
 	helpers.RabbitError(err, "Failed to publish a message")
-	consumer.AuthConsumer(email, q.Name)
+	//consumer.AuthConsumer(email, q.Name)
 }
