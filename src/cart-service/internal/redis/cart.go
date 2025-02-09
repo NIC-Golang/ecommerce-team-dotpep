@@ -83,3 +83,8 @@ func SaveToCart(id int, cart *models.Cart) error {
 	}
 	return nil
 }
+
+func DeleteCart(id int) error {
+
+	return nil
+}

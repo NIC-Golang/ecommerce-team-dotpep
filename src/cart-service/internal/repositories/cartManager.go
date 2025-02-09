@@ -68,3 +68,29 @@ func AddToCart() gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Items added to cart", "cart": existingCart})
 	}
 }
+
+func GetCart() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := helpers.IdAuthorization(c.Request.Header.Get("Authorization"))
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		intId, err := strconv.Atoi(id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Invalid user ID"})
+			return
+		}
+		cart, err := redis.GetCartFromRedis(intId)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Error retrieving cart", "details": err.Error()})
+			return
+		}
+		if cart == nil {
+			c.JSON(404, gin.H{"error": "Cart not found"})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Cart was found!", "cart": cart})
+	}
+}
