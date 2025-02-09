@@ -1,7 +1,9 @@
 package repositories
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -42,8 +44,6 @@ func GetOrders() gin.HandlerFunc {
 				&order.UserID,
 				&order.TotalAmount,
 				&order.Status,
-				&order.CreatedAt,
-				&order.UpdatedAt,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -111,8 +111,6 @@ func GetUsersOrders() gin.HandlerFunc {
 				&order.UserID,
 				&order.TotalAmount,
 				&order.Status,
-				&order.CreatedAt,
-				&order.UpdatedAt,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -196,67 +194,61 @@ func MakeAnOrder() gin.HandlerFunc {
 		}
 		token, err := helpers.HeaderTrimming(authHeader)
 		if err != nil {
-			c.JSON(500, gin.H{"error": err})
-		}
-		id, email, err := helpers.GetIdAndEmailFromToken(token)
-		if err != nil {
-			c.JSON(500, gin.H{"error": err})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.Abort()
 			return
 		}
+
+		id, email, err := helpers.GetIdAndEmailFromToken(token)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
 		var order models.Order
 		if err := c.ShouldBindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-
-		conn, err := config.GetDBConnection(ctx)
+		order.UserID, err = strconv.Atoi(id)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "There was some error with connection to database..."})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		defer conn.Close(ctx)
-
-		tx, err := conn.Begin(ctx)
+		orderJSON, err := json.Marshal(order)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error starting transaction"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marshalling order to JSON"})
 			return
 		}
-		defer tx.Rollback(ctx)
 
-		query := "INSERT INTO orders (user_id, total_amount, status, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING order_id"
-		err = tx.QueryRow(ctx, query, id, order.TotalAmount, order.Status).Scan(&order.ID)
+		resp1, err := http.Post("http://cart-service:8083/cart/orders", "application/json", bytes.NewReader(orderJSON))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting order"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to cart-service"})
+			return
+		}
+		defer resp1.Body.Close()
+
+		if resp1.StatusCode != http.StatusOK {
+			body, _ := io.ReadAll(resp1.Body)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with cart-service", "details": string(body)})
 			return
 		}
 
-		for _, item := range order.Products {
-			_, err := tx.Exec(ctx, "INSERT INTO order_items (order_id, product_id, quantity, price) VALUES ($1, $2, $3, $4)",
-				order.ID, item.ProductID, item.Quantity, item.Price)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Error inserting order item"})
-				return
-			}
-		}
-
-		if err := tx.Commit(ctx); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error committing transaction"})
-			return
-		}
-		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+strconv.Itoa(order.ID)+`", "email":"`+email+`"}`))
+		orderID := strconv.Itoa(order.ID)
+		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+orderID+`", "email":"`+email+`"}`))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to notifier-service"})
 			return
 		}
+		defer resp.Body.Close()
+
 		if resp.StatusCode != http.StatusOK {
 			body, _ := io.ReadAll(resp.Body)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with notifier-service", "details": string(body)})
 			return
 		}
-		resp.Body.Close()
+
 		c.JSON(http.StatusCreated, gin.H{"message": "Order created successfully", "order_id": order.ID})
 	}
 }

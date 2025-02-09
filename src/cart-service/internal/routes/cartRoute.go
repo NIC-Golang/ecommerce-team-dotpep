@@ -9,7 +9,7 @@ import (
 func CartManager(approachingRoute *gin.Engine) {
 	cartRoutes := approachingRoute.Group("/cart")
 	{
-		cartRoutes.POST("", repositories.AddToCart())
+		cartRoutes.POST("/orders", repositories.AddToCart())
 		//cartRoutes.GET("", repositories.GetCart())
 		//cartRoutes.DELETE(":id", repositories.DeleteFromCart())
 		//cartRoutes.DELETE("", repositories.ClearCart())
