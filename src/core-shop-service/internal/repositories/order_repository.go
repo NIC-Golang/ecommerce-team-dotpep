@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -199,21 +199,15 @@ func MakeAnOrder() gin.HandlerFunc {
 			return
 		}
 
-		id, email, err := helpers.GetIdAndEmailFromToken(token)
+		_, email, err := helpers.GetIdAndEmailFromToken(token)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 
-		var order models.Order
+		var order []models.OrderItem
 		if err := c.ShouldBindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
-			return
-		}
-
-		order.UserID, err = strconv.Atoi(id)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
 		orderJSON, err := json.Marshal(order)
@@ -234,9 +228,12 @@ func MakeAnOrder() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong with cart-service", "details": string(body)})
 			return
 		}
-
-		orderID := strconv.Itoa(order.ID)
-		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"order_id": "`+orderID+`", "email":"`+email+`"}`))
+		var descriptionBuilder strings.Builder
+		for _, item := range order {
+			descriptionBuilder.WriteString(fmt.Sprintf("ProductID: %s, Quantity: %d, Price: %.2f\n", item.ProductID, item.Quantity, item.Price))
+		}
+		description := descriptionBuilder.String()
+		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"description": "`+description+`", "email":"`+email+`"}`))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to notifier-service"})
 			return
@@ -249,6 +246,6 @@ func MakeAnOrder() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusCreated, gin.H{"message": "Order created successfully", "order_id": order.ID})
+		c.JSON(http.StatusCreated, gin.H{"message": "Order created successfully"})
 	}
 }

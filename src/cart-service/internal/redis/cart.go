@@ -84,7 +84,18 @@ func SaveToCart(id int, cart *models.Cart) error {
 	return nil
 }
 
-func DeleteCart(id int) error {
+func DeleteCartFromRedis(id int) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	deleted, err := client.Del(ctx, getCartKey(id)).Result()
+	if err != nil {
+		return fmt.Errorf("error deleting cart: %w", err)
+	}
+
+	if deleted == 0 {
+		return fmt.Errorf("cart not found")
+	}
 
 	return nil
 }

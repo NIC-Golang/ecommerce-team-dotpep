@@ -94,3 +94,36 @@ func GetCart() gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Cart was found!", "cart": cart})
 	}
 }
+
+func ClearCart() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := helpers.IdAuthorization(c.Request.Header.Get("Authorization"))
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		intId, err := strconv.Atoi(id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Invalid user ID"})
+			return
+		}
+		err = redis.DeleteCartFromRedis(intId)
+		if err != nil {
+			if err.Error() == "cart not found" {
+				c.JSON(404, gin.H{"error": "Cart not found"})
+				return
+			}
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Your cart was deleted successfully!"})
+	}
+}
+
+// func DeleteItemFromCart() gin.HandlerFunc{
+// 	return func(c *gin.Context){
+// 		productId := c.Param("id")
+
+// 	}
+// }
