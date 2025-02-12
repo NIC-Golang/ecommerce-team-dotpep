@@ -3,7 +3,7 @@ package models
 import "time"
 
 type Cart struct {
-	UserID    int        `json:"user_id"`
+	UserID    string     `json:"user_id"`
 	Items     []CartItem `json:"items"`
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt time.Time  `json:"updated_at"`

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/notifier-service/internal/consumer"
 	"github.com/notifier-service/internal/helpers"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -34,5 +33,5 @@ func OrderEvent(username, description, email string) {
 		Body:        []byte(body),
 	})
 	helpers.RabbitError(err, "Failed to publish a message")
-	consumer.OrderConsumer(email, q.Name)
+	//consumer.OrderConsumer(email, q.Name)
 }

@@ -10,16 +10,11 @@ import (
 type order struct {
 	Description string `json:"description"`
 	Email       string `json:"email"`
+	Name        string `json:"name"`
 }
 
 func OrderCreating() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		name, exists1 := c.Get("name")
-		email, exists2 := c.Get("email")
-		if !exists1 || !exists2 {
-			c.JSON(500, gin.H{"error": "Name or email not found in context"})
-			return
-		}
 
 		var order order
 		if err := c.ShouldBindJSON(&order); err != nil {
@@ -27,8 +22,8 @@ func OrderCreating() gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(200, gin.H{"message": fmt.Sprintf("%s, your order was created successfully!", name)})
+		c.JSON(200, gin.H{"message": fmt.Sprintf("%s, your order was created successfully!", order.Name)})
 
-		events.OrderEvent(name.(string), order.Description, email.(string))
+		events.OrderEvent(order.Name, order.Description, order.Email)
 	}
 }

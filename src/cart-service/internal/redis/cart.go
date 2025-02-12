@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"strconv"
 	"sync"
 	"time"
 
@@ -44,11 +43,11 @@ func GetRedisClient() *redis.Client {
 	return client
 }
 
-func getCartKey(id int) string {
-	return "cart:" + strconv.Itoa(id)
+func getCartKey(id string) string {
+	return "cart:" + id
 }
 
-func GetCartFromRedis(id int) (*models.Cart, error) {
+func GetCartFromRedis(id string) (*models.Cart, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -69,7 +68,7 @@ func GetCartFromRedis(id int) (*models.Cart, error) {
 	return &cart, nil
 }
 
-func SaveToCart(id int, cart *models.Cart) error {
+func SaveToCart(id string, cart *models.Cart) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
 	defer cancel()
 	jsonCart, err := json.Marshal(cart)
@@ -84,7 +83,7 @@ func SaveToCart(id int, cart *models.Cart) error {
 	return nil
 }
 
-func DeleteCartFromRedis(id int) error {
+func DeleteCartFromRedis(id string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 

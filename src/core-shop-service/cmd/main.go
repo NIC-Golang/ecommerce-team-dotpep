@@ -6,7 +6,6 @@ import (
 	"os"
 
 	"github.com/core/shop/golang/cmd/migrations"
-	"github.com/core/shop/golang/internal/middleware"
 	"github.com/core/shop/golang/internal/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,7 +30,6 @@ func main() {
 	router := gin.Default()
 
 	router.SetTrustedProxies([]string{ipAddress})
-	router.Use(middleware.AdminAuth())
 
 	routes.ProductManager(router)
 	routes.OrdersManager(router)

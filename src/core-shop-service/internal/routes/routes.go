@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/core/shop/golang/internal/middleware"
 	"github.com/core/shop/golang/internal/repositories"
 	"github.com/gin-gonic/gin"
 )
@@ -8,6 +9,7 @@ import (
 func ProductManager(approachingRoute *gin.Engine) {
 	productRoutes := approachingRoute.Group("/products")
 	{
+		productRoutes.Use(middleware.AdminAuth())
 		productRoutes.GET("", repositories.GetProducts())
 		productRoutes.GET("/:product_id", repositories.GetProduct())
 		productRoutes.POST("", repositories.InsertProduct())
@@ -39,6 +41,7 @@ func UserManager(approachingRoute *gin.Engine) {
 func CategoryManager(approachingRoute *gin.Engine) {
 	categoryRoutes := approachingRoute.Group("/categories")
 	{
+		categoryRoutes.Use(middleware.AdminAuth())
 		categoryRoutes.GET("/:id", repositories.GetCategory())
 		categoryRoutes.GET("", repositories.GetCategories())
 		categoryRoutes.POST("", repositories.CreateCategory())

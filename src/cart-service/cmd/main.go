@@ -2,6 +2,7 @@ package main
 
 import (
 	"cart-service/golang/internal/redis"
+	"cart-service/golang/internal/routes"
 	"fmt"
 	"log"
 	"os"
@@ -30,7 +31,7 @@ func main() {
 	}
 	router := gin.Default()
 	router.SetTrustedProxies([]string{ipAdress})
-
+	routes.CartManager(router)
 	err = router.Run(ipAdress + ":" + port)
 	if err != nil {
 		fmt.Printf("Trying to run server on ip %s ...", ipAdress)

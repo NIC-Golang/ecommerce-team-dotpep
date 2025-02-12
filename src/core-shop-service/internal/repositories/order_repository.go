@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -186,7 +185,7 @@ func DeleteOrderByOrderId() gin.HandlerFunc {
 
 func MakeAnOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.Request.Header.Get("Authorization")
+		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header missing"})
 			c.Abort()
@@ -204,7 +203,11 @@ func MakeAnOrder() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-
+		name, err := helpers.GetName(email)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		var order []models.OrderItem
 		if err := c.ShouldBindJSON(&order); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
@@ -216,7 +219,7 @@ func MakeAnOrder() gin.HandlerFunc {
 			return
 		}
 
-		resp1, err := http.Post("http://cart-service:8083/cart/orders", "application/json", bytes.NewReader(orderJSON))
+		resp1, err := helpers.SendWithHeaders(authHeader, orderJSON)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to cart-service"})
 			return
@@ -232,8 +235,19 @@ func MakeAnOrder() gin.HandlerFunc {
 		for _, item := range order {
 			descriptionBuilder.WriteString(fmt.Sprintf("ProductID: %s, Quantity: %d, Price: %.2f\n", item.ProductID, item.Quantity, item.Price))
 		}
-		description := descriptionBuilder.String()
-		resp, err := http.Post("http://notifier-service:8082/orders", "application/json", strings.NewReader(`{"description": "`+description+`", "email":"`+email+`"}`))
+
+		body := models.Notifier{
+			Name:        name,
+			Email:       email,
+			Description: descriptionBuilder.String(),
+		}
+		bodyNotify, err := json.Marshal(body)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marshalling notifier body to JSON"})
+			return
+		}
+
+		resp, err := helpers.SendNotifierRequest("http://notifier-service:8082/orders", http.MethodPost, bodyNotify)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error sending request to notifier-service"})
 			return

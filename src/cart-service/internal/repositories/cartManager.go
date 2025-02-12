@@ -4,7 +4,6 @@ import (
 	"cart-service/golang/internal/helpers"
 	"cart-service/golang/internal/models"
 	"cart-service/golang/internal/redis"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +11,12 @@ import (
 
 func AddToCart() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		id, err := helpers.IdAuthorization(c.Request.Header.Get("Authorization"))
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(500, gin.H{"error": "Header is missing!"})
+			return
+		}
+		id, err := helpers.IdAuthorization(authHeader)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -24,13 +28,7 @@ func AddToCart() gin.HandlerFunc {
 			return
 		}
 
-		intId, err := strconv.Atoi(id)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Invalid user ID"})
-			return
-		}
-
-		existingCart, err := redis.GetCartFromRedis(intId)
+		existingCart, err := redis.GetCartFromRedis(id)
 		if err != nil {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
@@ -38,7 +36,7 @@ func AddToCart() gin.HandlerFunc {
 
 		if existingCart == nil {
 			existingCart = &models.Cart{
-				UserID:    intId,
+				UserID:    id,
 				CreatedAt: time.Now().In(time.FixedZone("UTC+5", 5*60*60)),
 				Items:     []models.CartItem{},
 			}
@@ -61,7 +59,7 @@ func AddToCart() gin.HandlerFunc {
 
 		existingCart.UpdatedAt = time.Now().In(time.FixedZone("UTC+5", 5*60*60))
 
-		if err := redis.SaveToCart(intId, existingCart); err != nil {
+		if err := redis.SaveToCart(id, existingCart); err != nil {
 			c.JSON(500, gin.H{"error": "Failed to save cart"})
 			return
 		}
@@ -76,12 +74,7 @@ func GetCart() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		intId, err := strconv.Atoi(id)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Invalid user ID"})
-			return
-		}
-		cart, err := redis.GetCartFromRedis(intId)
+		cart, err := redis.GetCartFromRedis(id)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Error retrieving cart", "details": err.Error()})
 			return
@@ -102,12 +95,7 @@ func ClearCart() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
-		intId, err := strconv.Atoi(id)
-		if err != nil {
-			c.JSON(500, gin.H{"error": "Invalid user ID"})
-			return
-		}
-		err = redis.DeleteCartFromRedis(intId)
+		err = redis.DeleteCartFromRedis(id)
 		if err != nil {
 			if err.Error() == "cart not found" {
 				c.JSON(404, gin.H{"error": "Cart not found"})
