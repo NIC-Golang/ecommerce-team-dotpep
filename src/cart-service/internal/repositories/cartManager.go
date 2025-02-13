@@ -9,6 +9,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var localzone = time.FixedZone("UTC+5", 5*60*60)
+
 func AddToCart() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
@@ -37,7 +39,7 @@ func AddToCart() gin.HandlerFunc {
 		if existingCart == nil {
 			existingCart = &models.Cart{
 				UserID:    id,
-				CreatedAt: time.Now().In(time.FixedZone("UTC+5", 5*60*60)),
+				CreatedAt: time.Now().In(localzone),
 				Items:     []models.CartItem{},
 			}
 		}
@@ -57,7 +59,7 @@ func AddToCart() gin.HandlerFunc {
 			}
 		}
 
-		existingCart.UpdatedAt = time.Now().In(time.FixedZone("UTC+5", 5*60*60))
+		existingCart.UpdatedAt = time.Now().In(localzone)
 
 		if err := redis.SaveToCart(id, existingCart); err != nil {
 			c.JSON(500, gin.H{"error": "Failed to save cart"})
@@ -108,10 +110,65 @@ func ClearCart() gin.HandlerFunc {
 		c.JSON(200, gin.H{"message": "Your cart was deleted successfully!"})
 	}
 }
+func FindCartItemsByID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := helpers.IdAuthorization(c.Request.Header.Get("Authorization"))
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+		productId := c.Param("product_id")
+		if productId == "" {
+			c.JSON(500, gin.H{"error": "Hard to find product id"})
+			return
+		}
 
-// func DeleteItemFromCart() gin.HandlerFunc{
-// 	return func(c *gin.Context){
-// 		productId := c.Param("id")
+		item, err := redis.FindCartItem(productId, id)
+		if err != nil {
+			c.JSON(404, gin.H{"error": "Item not found"})
+			return
+		}
 
-// 	}
-// }
+		c.JSON(200, item)
+	}
+}
+
+func DeleteItemFromCart() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := helpers.IdAuthorization(c.Request.Header.Get("Authorization"))
+		if err != nil {
+			c.JSON(500, gin.H{"error": err.Error()})
+			return
+		}
+
+		productId := c.Param("id")
+
+		cart, err := redis.GetCartFromRedis(id)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to fetch cart"})
+			return
+		}
+
+		var newItems []models.CartItem
+		for _, item := range cart.Items {
+			if item.ProductID != productId {
+				newItems = append(newItems, item)
+			}
+		}
+
+		if len(newItems) == len(cart.Items) {
+			c.JSON(404, gin.H{"error": "Item not found in cart"})
+			return
+		}
+
+		cart.Items = newItems
+		cart.UpdatedAt = time.Now().In(localzone)
+		err = redis.SaveToCart(id, cart)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Failed to update cart"})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Item deleted successfully"})
+	}
+}

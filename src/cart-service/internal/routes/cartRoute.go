@@ -11,7 +11,8 @@ func CartManager(approachingRoute *gin.Engine) {
 	{
 		cartRoutes.POST("/orders", repositories.AddToCart())
 		cartRoutes.GET("", repositories.GetCart())
-		//cartRoutes.DELETE(":id", repositories.DeleteItemFromCart())
+		cartRoutes.DELETE(":id", repositories.DeleteItemFromCart())
 		cartRoutes.DELETE("", repositories.ClearCart())
+		cartRoutes.GET(":product_id", repositories.FindCartItemsByID())
 	}
 }

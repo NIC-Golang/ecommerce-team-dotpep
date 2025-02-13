@@ -55,7 +55,7 @@ func GetCartFromRedis(id string) (*models.Cart, error) {
 
 	res, err := client.Get(ctx, getCartKey(id)).Bytes()
 	if err == redis.Nil {
-		return nil, nil
+		return &models.Cart{}, nil
 	} else if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func SaveToCart(id string, cart *models.Cart) error {
 		return err
 	}
 
-	err = client.Set(ctx, getCartKey(id), jsonCart, 0).Err()
+	err = GetRedisClient().Set(ctx, getCartKey(id), jsonCart, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -93,8 +93,24 @@ func DeleteCartFromRedis(id string) error {
 	}
 
 	if deleted == 0 {
-		return fmt.Errorf("cart not found")
+		return nil
 	}
 
 	return nil
+}
+
+func FindCartItem(productId, id string) (*models.CartItem, error) {
+	cart, err := GetCartFromRedis(id)
+	if err != nil {
+		return nil, err
+	}
+	if cart == nil {
+		return nil, fmt.Errorf("cart not found")
+	}
+	for _, item := range cart.Items {
+		if item.ProductID == productId {
+			return &item, nil
+		}
+	}
+	return nil, fmt.Errorf("item not found in cart")
 }
