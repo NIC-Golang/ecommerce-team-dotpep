@@ -21,20 +21,7 @@ func ProductManager(approachingRoute *gin.Engine) {
 func OrdersManager(approachingRoute *gin.Engine) {
 	orderRoutes := approachingRoute.Group("/orders")
 	{
-		orderRoutes.GET("", repositories.GetOrders())
-		orderRoutes.GET("/:client_id", repositories.GetUsersOrders())
 		orderRoutes.POST("", repositories.MakeAnOrder())
-		orderRoutes.DELETE("/:order_id", repositories.DeleteOrderByOrderId())
-	}
-}
-
-func UserManager(approachingRoute *gin.Engine) {
-	userRoutes := approachingRoute.Group("/users")
-	{
-		userRoutes.GET("", repositories.GetUsers())
-		userRoutes.GET("/:user_id", repositories.GetUser())
-		userRoutes.PUT("/:user_id", repositories.UpdateUser())
-		userRoutes.DELETE("/:user_id", repositories.DeleteUser())
 	}
 }
 

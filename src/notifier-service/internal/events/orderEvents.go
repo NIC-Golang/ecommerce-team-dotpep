@@ -17,7 +17,7 @@ func OrderEvent(username, description, email string) {
 	helpers.RabbitError(err, "Failed to open a channel")
 	defer ch.Close()
 	q, err := ch.QueueDeclare(
-		"signup",
+		"order",
 		false,
 		false,
 		false,

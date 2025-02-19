@@ -12,7 +12,6 @@ import (
 )
 
 func main() {
-	//gin.SetMode(gin.ReleaseMode)
 	if err := migrations.RunMigrations(); err != nil {
 		fmt.Println(err)
 	}
@@ -33,10 +32,10 @@ func main() {
 
 	routes.ProductManager(router)
 	routes.OrdersManager(router)
-	routes.UserManager(router)
 	routes.CategoryManager(router)
 
-	if err := router.Run(ipAddress + ":" + port); err != nil {
+	err = router.Run(ipAddress + ":" + port)
+	if err != nil {
 		fmt.Printf("Trying to run server on ip %s ...", ipAddress)
 		log.Fatal("There's some error occured with running the server...")
 	}

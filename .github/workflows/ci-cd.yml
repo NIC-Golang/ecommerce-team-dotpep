@@ -1,0 +1,49 @@
+name: CI/CD Pipeline
+
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Install dependencies
+        run: go mod tidy
+
+      - name: Run tests
+        run: go test ./...
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    
+    - name: Generating .env file
+      run: |
+        echo "CART_PORT=${{ secrets.CART_PORT }}" >> .env
+        echo "PORT_AUTH=${{ secrets.PORT_AUTH }}" >> .env
+        echo "PORT_CORE=${{ secrets.PORT_CORE }}" >> .env
+        echo "PORT_NOTIFIER=${{ secrets.PORT_NOTIFIER }}" >> .env
+        echo "MONGO=${{ secrets.MONGO }}" >> .env
+        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+        echo "POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}" >> .env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+      
+    - name: Build Docker images
+      run: docker-compose build
+    
+    - name: Start services with Docker Compose
+      run: docker-compose up -d
+
+    # - name: Deploy to production
+    #   run: |
+    #     echo "Deploying to production..."
