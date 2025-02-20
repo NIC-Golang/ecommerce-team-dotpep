@@ -25,7 +25,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	port := os.Getenv("PORT")
+	port := os.Getenv("CART_SERVICE_PORT")
 	if port == "" {
 		port = "8003"
 	}

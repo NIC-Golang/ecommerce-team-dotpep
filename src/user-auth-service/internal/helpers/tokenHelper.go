@@ -86,13 +86,9 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 	if err != nil {
 		return nil, fmt.Sprintf("error loading .env file: %v", err)
 	}
-	secretKey := os.Getenv("SECRET_KEY")
-	if secretKey == "" {
-		return nil, "SECRET_KEY is not set"
-	}
 
 	token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
+		return []byte(key), nil
 	})
 
 	if err != nil {
@@ -112,12 +108,8 @@ func ValidateToken(signedToken string) (claims *SignedDetails, msg string) {
 }
 
 func ExtractClaimsFromToken(userToken string) (*SignedDetails, error) {
-	secretKey := os.Getenv("SECRET_KEY")
-	if secretKey == "" {
-		return nil, fmt.Errorf("secret key is not set")
-	}
 	token, err := jwt.ParseWithClaims(userToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
-		return []byte(secretKey), nil
+		return []byte(key), nil
 	})
 
 	if err != nil {

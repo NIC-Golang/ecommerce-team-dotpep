@@ -21,7 +21,7 @@ func main() {
 	}
 	ipAddress := os.Getenv("IP")
 
-	port := os.Getenv("PORT")
+	port := os.Getenv("CORE_SERVICE_PORT")
 	if port == "" {
 		port = "8000"
 	}

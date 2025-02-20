@@ -40,11 +40,43 @@ jobs:
         echo "POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}" >> .env
         echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
       
+    - name: Generate .env for Cart Service
+      working-directory: ./src/cart-service
+      run: |
+        echo "IP=${{ secrets.IP }}" >> src/cart-service/.env
+        echo "adrRedis=${{ secrets.ADRREDIS }}" >> src/cart-service/.env
+        echo "CART_SERVICE_PORT=${{ secrets.CART_SERVICE_PORT }}" >> src/cart-service/.env
+
+    - name: Generating .env file for Core Service
+      working-directory: ./src/core-shop-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> src/core-shop-service/.env
+        echo "CORE_SERVICE_PORT=${{ secrets.CORE_SERVICE_PORT }}" >> src/core-shop-service/.env
+        echo "IP_SQL=${{ secrets.IP_SQL }}" >> src/core-shop-service/.env
+        echo "PORT_SQL=${{ secrets.PORT_SQL }}" >> src/core-shop-service/.env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> src/core-shop-service/.env
+        echo "POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}" >> src/core-shop-service/.env
+        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> src/core-shop-service/.env
+        
+    - name: Generating .env file for Auth Service
+      working-directory: ./src/user-auth-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> src/user-auth-service/.env
+        echo "AUTH_PORT=${{ secrets.AUTH_PORT }}" >> src/user-auth-service/.env
+        echo "KEY=${{ secrets.KEY }}" >> src/user-auth-service/.env
+        echo "MONGO_URL=${{ secrets.MONGO_AUTH_URL }}" >> src/user-auth-service/.env
+
+    - name: Generating .env file for Notifier Service
+      working-directory: ./src/notifier-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> src/notifier-service/.env
+        echo "NOTIFIER_PORT=${{ secrets.NOTIFIER_PORT }}" >> src/notifier-service/.env
+
     - name: Build Docker images
-      run: docker-compose build
+      run: docker compose build
     
     - name: Start services with Docker Compose
-      run: docker-compose up -d
+      run: docker compose up -d
 
     # - name: Deploy to production
     #   run: |

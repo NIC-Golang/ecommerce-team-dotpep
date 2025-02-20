@@ -18,7 +18,7 @@ func DBconn() {
 	if err := godotenv.Load("/app/.env"); err != nil {
 		log.Fatal(err)
 	}
-	password := os.Getenv("SQL_PASS")
+	password := os.Getenv("POSTGRES_PASS")
 	_, cancel := context.WithTimeout(context.Background(), time.Second*10)
 
 	defer cancel()
@@ -38,7 +38,7 @@ func GetDBConnection(ctx context.Context) (*pgx.Conn, error) {
 		return nil, fmt.Errorf("error loading .env file")
 	}
 	host := os.Getenv("IP_SQL")
-	password := os.Getenv("SQL_PASS")
+	password := os.Getenv("POSTGRES_PASS")
 	port := os.Getenv("PORT_SQL")
 	if port == "" {
 		port = "5432"
