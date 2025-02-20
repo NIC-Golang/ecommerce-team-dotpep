@@ -73,7 +73,7 @@ jobs:
         echo "NOTIFIER_PORT=${{ secrets.NOTIFIER_PORT }}" >> .env
 
     - name: Build Docker images
-      run: docker compose build
+      run: docker compose build --no-cache
     
     - name: Start services with Docker Compose
       run: docker compose up -d
