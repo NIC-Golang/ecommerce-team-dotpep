@@ -45,6 +45,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src/cart-service
+          file: ./src/cart-service/Dockerfile
           push: true
           tags: maxfiv/cart-service:latest
 
@@ -52,6 +53,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src/core-shop-service
+          file: ./src/core-shop-service/Dockerfile
           push: true
           tags: maxfiv/core-shop-service:latest
 
@@ -59,6 +61,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src/user-auth-service
+          file: ./src/user-auth-service/Dockerfile
           push: true
           tags: maxfiv/auth-service:latest
 
@@ -66,6 +69,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ./src/notifier-service
+          file: ./src/notifier-service/Dockerfile
           push: true
           tags: maxfiv/notifier-service:latest
   deploy:
