@@ -21,6 +21,7 @@ jobs:
       - name: Run tests for cart service
         working-directory: ./src/cart-service
         run: go test ./... -v
+
   build-and-push:
     needs: build-and-test
     runs-on: ubuntu-latest
