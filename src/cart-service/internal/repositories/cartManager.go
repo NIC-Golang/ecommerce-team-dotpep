@@ -40,7 +40,6 @@ func AddToCart() gin.HandlerFunc {
 			existingCart = &models.Cart{
 				UserID:    id,
 				CreatedAt: time.Now().In(localzone),
-				Items:     []models.CartItem{},
 			}
 		}
 

@@ -30,12 +30,14 @@ func IdAuthorization(bearerToken string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to read response body: %w", err)
 	}
-	fmt.Println("Gained response:", string(body))
 
 	var result Order
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
+	}
+	if result.Id == "" {
+		return "", fmt.Errorf("id is missing! cannot create a cart")
 	}
 
 	return result.Id, nil
