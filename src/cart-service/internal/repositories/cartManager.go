@@ -38,7 +38,6 @@ func AddToCart() gin.HandlerFunc {
 
 		if existingCart == nil {
 			existingCart = &models.Cart{
-				UserID:    id,
 				CreatedAt: time.Now().In(localzone),
 			}
 		}
@@ -59,7 +58,7 @@ func AddToCart() gin.HandlerFunc {
 		}
 
 		existingCart.UpdatedAt = time.Now().In(localzone)
-
+		existingCart.UserID = id
 		if err := redis.SaveToCart(id, existingCart); err != nil {
 			c.JSON(500, gin.H{"error": "Failed to save cart"})
 			return
