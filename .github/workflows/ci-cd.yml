@@ -1,0 +1,133 @@
+name: CI/CD Pipeline
+
+on: [push]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Install deps for cart service
+        working-directory: ./src/cart-service
+        run: go mod tidy
+
+      - name: Run tests for cart service
+        working-directory: ./src/cart-service
+        run: go test ./... -v
+
+  build-and-push:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push Cart Service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/cart-service
+          file: ./src/cart-service/Dockerfile
+          push: true
+          tags: maxfiv/cart-service:latest
+
+      - name: Build and push Core Service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/core-shop-service
+          file: ./src/core-shop-service/Dockerfile
+          push: true
+          tags: maxfiv/core-shop-service:latest
+
+      - name: Build and push Auth Service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/user-auth-service
+          file: ./src/user-auth-service/Dockerfile
+          push: true
+          tags: maxfiv/auth-service:latest
+
+      - name: Build and push Notifier Service image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./src/notifier-service
+          file: ./src/notifier-service/Dockerfile
+          push: true
+          tags: maxfiv/notifier-service:latest
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out repository
+      uses: actions/checkout@v4
+    
+    - name: Generating .env file
+      run: |
+        echo "CART_PORT=${{ secrets.CART_PORT }}" >> .env
+        echo "PORT_AUTH=${{ secrets.PORT_AUTH }}" >> .env
+        echo "PORT_CORE=${{ secrets.PORT_CORE }}" >> .env
+        echo "PORT_NOTIFIER=${{ secrets.PORT_NOTIFIER }}" >> .env
+        echo "MONGO=${{ secrets.MONGO }}" >> .env
+        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+        echo "POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}" >> .env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+      
+    - name: Generate .env for Cart Service
+      working-directory: ./src/cart-service
+      run: |
+        echo "IP=${{ secrets.IP }}" >> .env
+        echo "adrRedis=${{ secrets.ADRREDIS }}" >> .env
+        echo "CART_SERVICE_PORT=${{ secrets.CART_SERVICE_PORT }}" >> .env
+
+    - name: Generating .env file for Core Service
+      working-directory: ./src/core-shop-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> .env
+        echo "CORE_SERVICE_PORT=${{ secrets.CORE_SERVICE_PORT }}" >> .env
+        echo "IP_SQL=${{ secrets.IP_SQL }}" >> .env
+        echo "PORT_SQL=${{ secrets.PORT_SQL }}" >> .env
+        echo "POSTGRES_USER=${{ secrets.POSTGRES_USER }}" >> .env
+        echo "POSTGRES_PASS=${{ secrets.POSTGRES_PASS }}" >> .env
+        echo "POSTGRES_DB=${{ secrets.POSTGRES_DB }}" >> .env
+        
+    - name: Generating .env file for Auth Service
+      working-directory: ./src/user-auth-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> .env
+        echo "AUTH_PORT=${{ secrets.AUTH_PORT }}" >> .env
+        echo "KEY=${{ secrets.KEY }}" >> .env
+        echo "MONGO_URL=${{ secrets.MONGO_AUTH_URL }}" >> .env
+
+    - name: Generating .env file for Notifier Service
+      working-directory: ./src/notifier-service
+      run:  |
+        echo "IP=${{ secrets.IP }}" >> .env
+        echo "NOTIFIER_PORT=${{ secrets.NOTIFIER_PORT }}" >> .env
+
+    - name: Pull latest Docker images
+      run: docker compose pull  
+    
+    - name: Start services with Docker Compose
+      run: docker compose up -d
+
+    # - name: Deploy to production
+    #   run: |
+    #     echo "Deploying to production..."
