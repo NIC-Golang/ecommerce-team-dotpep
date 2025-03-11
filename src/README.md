@@ -108,9 +108,11 @@ Restaurant ER-D:
 
 - Scrape Amazon Shop, Flip.kz, Kaspi Shop, Meloman (marwin) kz websites (choose one of them first) Book section and save it in database Product table, using Golang Colly library, make http request and get html data, work with divs and html tags.
 
-**Basic CRUD:**
+**Basic CRUD (REST API endpoints):**
 
 - define what scraped data you need save, in your database table/entity.
+- you can use MongoDB or PostgreSQL as Database.
+- for REST API use Golang Gin
 - get product by id
 - get list of products
 - Add Pagination feature
