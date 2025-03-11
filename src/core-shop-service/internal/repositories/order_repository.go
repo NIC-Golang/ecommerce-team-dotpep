@@ -1,12 +1,12 @@
 package repositories
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	"github.com/core/shop/golang/internal/helpers"
 	"github.com/core/shop/golang/internal/models"
 	"github.com/gin-gonic/gin"
@@ -42,7 +42,7 @@ func MakeAnOrder() gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 			return
 		}
-		orderJSON, err := json.Marshal(order)
+		orderJSON, err := sonic.Marshal(order)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marshalling order to JSON"})
 			return
@@ -70,7 +70,7 @@ func MakeAnOrder() gin.HandlerFunc {
 			Email:       email,
 			Description: descriptionBuilder.String(),
 		}
-		bodyNotify, err := json.Marshal(body)
+		bodyNotify, err := sonic.Marshal(body)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marshalling notifier body to JSON"})
 			return

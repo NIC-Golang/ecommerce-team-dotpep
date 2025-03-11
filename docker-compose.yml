@@ -4,12 +4,18 @@ services:
     container_name: mongodb
     ports:
       - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-    - "5673:5672"
-    - "15672:15672"
+      - "5673:5672"
+      - "15672:15672"
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
       interval: 10s
@@ -21,7 +27,7 @@ services:
       context: ./src/notifier-service
       dockerfile: Dockerfile
     env_file:
-    - src/notifier-service/.env
+      - src/notifier-service/.env
     ports:
       - ${PORT_NOTIFIER}
     depends_on:
@@ -51,6 +57,7 @@ services:
       - mongodb
     environment:
       MONGO_URL: ${MONGO}
+  
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -76,6 +83,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   cart-service:
     build:
       context: ./src/cart-service
@@ -86,6 +99,7 @@ services:
       - src/cart-service/.env
     depends_on:
       - redis
+
   redis:
     image: redis:7.2
     container_name: redis
@@ -93,6 +107,12 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   redis_data:

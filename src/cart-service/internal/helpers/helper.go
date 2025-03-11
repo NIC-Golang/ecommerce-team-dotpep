@@ -1,11 +1,12 @@
 package helpers
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/bytedance/sonic"
 )
 
 type Order struct {
@@ -32,7 +33,7 @@ func IdAuthorization(bearerToken string) (string, error) {
 	}
 
 	var result Order
-	err = json.Unmarshal(body, &result)
+	err = sonic.Unmarshal(body, &result)
 	if err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
