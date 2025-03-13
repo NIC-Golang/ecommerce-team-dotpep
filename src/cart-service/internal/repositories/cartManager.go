@@ -9,7 +9,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var localzone = time.FixedZone("UTC+5", 5*60*60)
+var localzone = time.FixedZone("UTC+5", localzoneOffset)
+
+const localzoneOffset = 5 * 60 * 60
 
 func AddToCart() gin.HandlerFunc {
 	return func(c *gin.Context) {

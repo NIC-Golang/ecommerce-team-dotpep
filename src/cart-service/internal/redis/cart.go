@@ -56,7 +56,7 @@ func GetCartFromRedis(id string) (*models.Cart, error) {
 
 	res, err := client.Get(ctx, getCartKey(id)).Bytes()
 	if err == redis.Nil {
-		return &models.Cart{}, nil
+		return nil, nil
 	} else if err != nil {
 		return nil, err
 	}
