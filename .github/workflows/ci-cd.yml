@@ -63,7 +63,7 @@ jobs:
           context: ./src/user-auth-service
           file: ./src/user-auth-service/Dockerfile
           push: true
-          tags: maxfiv/auth-service:latest
+          tags: maxfiv/user-auth-service:latest
 
       - name: Build and push Notifier Service image
         uses: docker/build-push-action@v6
