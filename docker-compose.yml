@@ -1,38 +1,27 @@
 services:
-  mongodb:
-    image: mongo:6
-    container_name: mongodb
-    ports:
-      - "27017:27017"
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5673:5672"
-      - "15672:15672"
-    healthcheck:
-      test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-  
-  notifier-service:
+  cart-service:
     build:
-      context: ./src/notifier-service
+      context: ./src/cart-service
       dockerfile: Dockerfile
-    env_file:
-      - src/notifier-service/.env
     ports:
-      - ${PORT_NOTIFIER}
+      - ${CART_PORT}
+    env_file:
+      - src/cart-service/.env
     depends_on:
-      rabbitmq:
-        condition: service_healthy
+      - redis
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   core-shop-service:
     build:
@@ -45,19 +34,6 @@ services:
     depends_on:
       - postgres
 
-  user-auth-service:
-    build:
-      context: ./src/user-auth-service
-      dockerfile: Dockerfile
-    ports:
-      - ${PORT_AUTH}
-    env_file:
-      - src/user-auth-service/.env
-    depends_on:
-      - mongodb
-    environment:
-      MONGO_URL: ${MONGO}
-  
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
@@ -84,26 +60,50 @@ services:
     ports:
       - "5432:5432"
 
-  cart-service:
+  notifier-service:
     build:
-      context: ./src/cart-service
+      context: ./src/notifier-service
+      dockerfile: Dockerfile
+    env_file:
+      - src/notifier-service/.env
+    ports:
+      - ${PORT_NOTIFIER}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5673:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  user-auth-service:
+    build:
+      context: ./src/user-auth-service
       dockerfile: Dockerfile
     ports:
-      - ${CART_PORT}
+      - ${PORT_AUTH}
     env_file:
-      - src/cart-service/.env
+      - src/user-auth-service/.env
     depends_on:
-      - redis
-
-  redis:
-    image: redis:7.2
-    container_name: redis
+      - mongodb
+    environment:
+      MONGO_URL: ${MONGO}
+  
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
     ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
+      - "27017:27017"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
