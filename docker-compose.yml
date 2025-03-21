@@ -28,7 +28,7 @@ services:
       context: ./src/core-shop-service
       dockerfile: Dockerfile
     ports:
-      - ${PORT_CORE}
+      - ${CORE_SERVICE_PORT}
     env_file:
       - src/core-shop-service/.env
     depends_on:
