@@ -94,6 +94,7 @@ services:
       - src/user-auth-service/.env
     depends_on:
       - mongodb
+      - notifier-service
     environment:
       MONGO_URL: ${MONGO}
   

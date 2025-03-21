@@ -20,3 +20,7 @@ func OrderRoutes(incomingRoute *gin.Engine) {
 		orderEventRoute.POST("", repositories.OrderCreating())
 	}
 }
+
+func AdminRoute(incomingRoute *gin.Engine) {
+	incomingRoute.POST("/admin", repositories.AdminNotify())
+}
