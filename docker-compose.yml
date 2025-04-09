@@ -127,6 +127,43 @@ services:
     networks:
       - docker-network
 
+
+  mysql:
+    image: mysql
+    restart: always
+    container_name: mysql
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}
+      - MYSQL_DATABASE=notifier
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${PASSWORD}
+    ports:
+      - "3306:${PORT_MYSQL}"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - docker-network
+
+  bot:
+    build: 
+      context: ./src/telegram-bot
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    ports:
+      - "8000:${PORT_BOT}"
+    networks:
+      - docker-network
+    env_file:
+      - src/telegram-bot/.env
+    depends_on:
+      - mysql
+      - mongodb
+
 volumes:
   postgres_data:
   redis_data:

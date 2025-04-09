@@ -80,25 +80,27 @@ func GetAll() gin.HandlerFunc {
 	}
 }
 
-type notifyUser struct {
-	NotifierId string `json:"user_id"`
-}
-
 func GetUserByEmail() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		email := c.Param("email")
 		if email == "" {
-			c.JSON(500, gin.H{"error": "empty email provided"})
+			c.JSON(400, gin.H{"error": "empty email provided"})
 			return
 		}
+
 		ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
 		defer cancel()
-		var foundUser notifyUser
+
+		var foundUser models.User
 		err := userCollection.FindOne(ctx, bson.M{"email": email}).Decode(&foundUser)
 		if err != nil {
-			c.JSON(500, gin.H{"error": "Couldn't find user with email"})
+			if err == mongo.ErrNoDocuments {
+				c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			} else {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+			}
 			return
 		}
-		c.JSON(200, foundUser)
+		c.JSON(200, gin.H{"user_id": foundUser.User_id})
 	}
 }
