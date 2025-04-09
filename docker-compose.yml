@@ -9,6 +9,8 @@ services:
       - src/cart-service/.env
     depends_on:
       - redis
+    networks:
+      - docker-network
 
   redis:
     image: redis:7.2
@@ -22,17 +24,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - docker-network
 
   core-shop-service:
     build:
       context: ./src/core-shop-service
       dockerfile: Dockerfile
     ports:
-      - ${CORE_SERVICE_PORT}
+      - ${PORT_CORE}
     env_file:
       - src/core-shop-service/.env
     depends_on:
       - postgres
+    networks:
+      - docker-network
 
   pgadmin:
     image: dpage/pgadmin4
@@ -46,6 +52,8 @@ services:
       - "5050:80"
     depends_on:
       - postgres
+    networks:
+      - docker-network
 
   postgres:
     image: postgres:13.3
@@ -59,6 +67,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - docker-network
 
   notifier-service:
     build:
@@ -71,6 +81,8 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+    networks:
+      - docker-network
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -83,6 +95,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - docker-network
   
   user-auth-service:
     build:
@@ -97,6 +111,8 @@ services:
       - notifier-service
     environment:
       MONGO_URL: ${MONGO}
+    networks:
+      - docker-network
   
   mongodb:
     image: mongo:6
@@ -108,7 +124,12 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - docker-network
 
 volumes:
   postgres_data:
   redis_data:
+
+networks:
+  docker-network:

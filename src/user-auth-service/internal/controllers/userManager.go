@@ -79,3 +79,26 @@ func GetAll() gin.HandlerFunc {
 		c.JSON(http.StatusOK, users)
 	}
 }
+
+type notifyUser struct {
+	NotifierId string `json:"user_id"`
+}
+
+func GetUserByEmail() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		email := c.Param("email")
+		if email == "" {
+			c.JSON(500, gin.H{"error": "empty email provided"})
+			return
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), timeoutDuration)
+		defer cancel()
+		var foundUser notifyUser
+		err := userCollection.FindOne(ctx, bson.M{"email": email}).Decode(&foundUser)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Couldn't find user with email"})
+			return
+		}
+		c.JSON(200, foundUser)
+	}
+}

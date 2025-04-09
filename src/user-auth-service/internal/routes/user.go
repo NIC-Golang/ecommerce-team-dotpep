@@ -14,6 +14,7 @@ func UserManager(aproachingRoute *gin.Engine) {
 		userRoutes.Use(middleware.Authentification())
 		userRoutes.GET("", controllers.GetAll())
 		userRoutes.GET("/:id", controllers.GetUser())
+		userRoutes.GET("/notifier/:email", controllers.GetUserByEmail())
 	}
 	userNotify := aproachingRoute.Group("/name-taking")
 	{
