@@ -2,11 +2,11 @@ package repository
 
 import (
 	"log"
-	"regexp"
 	"telegram-bot/internal/db"
 	"telegram-bot/internal/helpers"
 	"telegram-bot/internal/models"
 
+	"github.com/badoux/checkmail"
 	"gorm.io/gorm"
 )
 
@@ -65,16 +65,17 @@ func (client *Client) Auth(update models.Update, chatID int, userSession *models
 		client.SendMessageWithButtons(chatID, "Enter your email", []string{"Cancel"}, []string{"cancel"})
 	case "email":
 		log.Println("Hey, I'm started email!")
-		// if !isValidEmail(userSession.User.Email) || text == "" {
-		// 	return helpers.ErrorHelper(err, "Email not valid")
-		// }
-		userSession.Step = "done"
-		log.Println("Hey, my step now is done!")
-		userId, err := helpers.NotidierIdTaking(text)
-		if err != nil {
-			return err
+		if !isValidEmail(text) || text == "" {
+			client.SendMessage(chatID, "Email is not valid")
+			return nil
 		}
-		log.Println("Hey, I'm here!")
+
+		userSession.Step = "done"
+		userId, err := helpers.NotifierIdTaking(text)
+		if err != nil{
+			log.Print(err)
+		}
+
 		var user = models.User{
 			ID:         chatID,
 			Username:   username,
@@ -98,6 +99,9 @@ func (client *Client) Auth(update models.Update, chatID int, userSession *models
 }
 
 func isValidEmail(email string) bool {
-	re := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-	return re.MatchString(email)
+	err := checkmail.ValidateFormat(email)
+	if err != nil {
+		return false
+	}
+	return true
 }

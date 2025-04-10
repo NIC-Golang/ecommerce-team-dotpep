@@ -43,7 +43,6 @@ services:
   pgadmin:
     image: dpage/pgadmin4
     container_name: pgadmin
-    restart: always
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -102,6 +101,7 @@ services:
     build:
       context: ./src/user-auth-service
       dockerfile: Dockerfile
+    container_name: user-auth-service
     ports:
       - ${PORT_AUTH}
     env_file:
@@ -117,6 +117,7 @@ services:
   mongodb:
     image: mongo:6
     container_name: mongodb
+    restart: always
     ports:
       - "27017:27017"
     healthcheck:
@@ -163,6 +164,7 @@ services:
     depends_on:
       - mysql
       - mongodb
+      - user-auth-service
 
 volumes:
   postgres_data:
