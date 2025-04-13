@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -46,6 +47,10 @@ func GetRedisClient() *redis.Client {
 
 func getCartKey(id string) string {
 	return "cart:" + id
+}
+
+func getOrderKey(id string) string {
+	return "order:" + id
 }
 
 func GetCartFromRedis(id string) (*models.Cart, error) {
@@ -114,4 +119,35 @@ func FindCartItem(productId, id string) (*models.CartItem, error) {
 		}
 	}
 	return nil, fmt.Errorf("item not found in cart")
+}
+
+func CreateOrder(id string, cart *models.Cart, createdAT time.Time) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	defer cancel()
+	total := 0.0
+	for _, val := range cart.Items {
+		total += val.Price
+	}
+	order := &models.Order{
+		OrderNumber: generateOrderId(),
+		UserID:      cart.UserID,
+		Status:      "confirmed",
+		Items:       cart.Items,
+		TotalPrice:  total,
+		CreatedAt:   createdAT,
+	}
+	orderJSON, err := sonic.Marshal(order)
+	if err != nil {
+		return err
+	}
+	err = GetRedisClient().Set(ctx, getOrderKey(id), orderJSON, 0).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func generateOrderId() string {
+	rand.Seed(time.Now().UnixNano())
+	return fmt.Sprintf("ORDER-%06d", rand.Intn(1000000))
 }

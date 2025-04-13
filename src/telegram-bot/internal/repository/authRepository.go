@@ -72,7 +72,7 @@ func (client *Client) Auth(update models.Update, chatID int, userSession *models
 
 		userSession.Step = "done"
 		userId, err := helpers.NotifierIdTaking(text)
-		if err != nil{
+		if err != nil {
 			log.Print(err)
 		}
 
@@ -100,8 +100,5 @@ func (client *Client) Auth(update models.Update, chatID int, userSession *models
 
 func isValidEmail(email string) bool {
 	err := checkmail.ValidateFormat(email)
-	if err != nil {
-		return false
-	}
-	return true
+	return err != nil
 }
