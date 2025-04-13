@@ -100,5 +100,5 @@ func (client *Client) Auth(update models.Update, chatID int, userSession *models
 
 func isValidEmail(email string) bool {
 	err := checkmail.ValidateFormat(email)
-	return err != nil
+	return err == nil
 }

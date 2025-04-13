@@ -21,27 +21,31 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 	user, err := repo.findUser(callbackId)
 	log.Printf("Error finding user:%v\n", err)
 
-	cart, err := sendToRedis(user.NotifierID)
+	order, err := sendToRedis(user.NotifierID)
 	log.Printf("Erorr sending to notifier: %v\n", err)
 	textItem := "U+1F6CD U+FE0F Order details:\n"
-	for _, item := range cart.Items {
+	for _, item := range order.Items {
 		textItem += fmt.Sprintf("• %s - %d \n", item.Description, item.Quantity)
 	}
-
-	client.SendMessage(callbackId, textItem+fmt.Sprintf("Order completion date: %s", cart.UpdatedAt))
+	orderNum := fmt.Sprintf("Your order number: %s\n", order.OrderNumber)
+	orderDate := fmt.Sprintf("Order completion date: %s\n", order.CreatedAt.Format("2006-01-02 15:04:05"))
+	orderStatus := fmt.Sprintf("Order status: %s\n", order.Status)
+	client.SendMessage(callbackId, textItem+orderNum+orderDate+orderStatus+"We will send you a notification as soon as the order is delivered!")
 }
 
-func sendToRedis(id string) (*models.Cart, error) {
-	resp, err := http.Post("http://cart-service:8083/cart/checkout", "application/json", strings.NewReader(fmt.Sprintf(`{"id":"%s"}`, id)))
+func sendToRedis(id string) (*models.Order, error) {
+	resp, err := http.Post("http://cart-service:8083/cart/order", "application/json", strings.NewReader(fmt.Sprintf(`{"id":"%s"}`, id)))
 	if err != nil {
 		return nil, helpers.ErrorHelper(err, "error sending request to notifier-service")
 	}
 
 	defer resp.Body.Close()
-	var order *models.Cart
+	var order *models.Order
 	err = json.NewDecoder(resp.Body).Decode(&order)
 	if err != nil {
 		return nil, helpers.ErrorHelper(err, "error parsing orders from JSON")
+	} else if order == nil {
+		return nil, fmt.Errorf("order is empty")
 	}
 	return order, nil
 }

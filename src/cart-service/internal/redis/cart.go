@@ -151,3 +151,22 @@ func generateOrderId() string {
 	rand.Seed(time.Now().UnixNano())
 	return fmt.Sprintf("ORDER-%06d", rand.Intn(1000000))
 }
+
+func GetOrderFromRedis(id string) (*models.Order, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := GetRedisClient().Get(ctx, getOrderKey(id)).Bytes()
+	if err == redis.Nil {
+		return nil, nil
+	} else if err != nil {
+		return nil, err
+	}
+	var order *models.Order
+	err = sonic.Unmarshal(result, &order)
+	if err != nil {
+		return nil, err
+	}
+
+	return order, nil
+}

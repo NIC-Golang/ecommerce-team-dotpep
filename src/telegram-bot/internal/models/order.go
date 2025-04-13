@@ -19,10 +19,10 @@ type CartItem struct {
 }
 
 type Order struct {
-	OrderNumber string     `json:"order_numder"`
-	UserID      string     `json:"user_id"`
-	Items       []CartItem `json:"items"`
-	CreatedAt   time.Time  `json:"created_at"`
-	Status      string     `json:"status"`
-	TotalPrice  float64    `json:"total_price"`
+	OrderNumber string     `json:"order_numder" validate:"required"`
+	UserID      string     `json:"user_id" validate:"required"`
+	Items       []CartItem `json:"items" validate:"required"`
+	CreatedAt   time.Time  `json:"created_at" validate:"required"`
+	Status      string     `json:"status" validate:"required"`
+	TotalPrice  float64    `json:"total_price" validate:"required"`
 }
