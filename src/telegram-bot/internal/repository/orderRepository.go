@@ -23,14 +23,18 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 
 	order, err := sendToRedis(user.NotifierID)
 	log.Printf("Erorr sending to notifier: %v\n", err)
-	textItem := "U+1F6CD U+FE0F Order details:\n"
+	textItem := "🛍️ Order details:\n"
 	for _, item := range order.Items {
 		textItem += fmt.Sprintf("• %s - %d \n", item.Description, item.Quantity)
 	}
-	orderNum := fmt.Sprintf("Your order number: %s\n", order.OrderNumber)
-	orderDate := fmt.Sprintf("Order completion date: %s\n", order.CreatedAt.Format("2006-01-02 15:04:05"))
-	orderStatus := fmt.Sprintf("Order status: %s\n", order.Status)
-	client.SendMessage(callbackId, textItem+orderNum+orderDate+orderStatus+"We will send you a notification as soon as the order is delivered!")
+	orderNum := fmt.Sprintf("📦 Your order number: %s\n", order.OrderNumber)
+	orderDate := fmt.Sprintf("📅 Order completion date: %s\n", order.CreatedAt.Format("02 Jan 2006 15:04"))
+	orderStatus := fmt.Sprintf("🚚 Order status: %s\n", order.Status)
+	if len(order.Items) == 0 {
+		client.SendMessage(callbackId, "📦 You don't have any items in your order")
+		return
+	}
+	client.SendMessage(callbackId, textItem+orderNum+orderDate+orderStatus+"💬 We will send you a notification as soon as the order is delivered!")
 }
 
 func sendToRedis(id string) (*models.Order, error) {
