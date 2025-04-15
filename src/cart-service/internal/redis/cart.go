@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -17,6 +16,10 @@ import (
 var (
 	once   sync.Once
 	client *redis.Client
+)
+
+const (
+	timeDuration = 10 * time.Second
 )
 
 func InitRedis(address string) error {
@@ -38,7 +41,7 @@ func InitRedis(address string) error {
 	return nil
 }
 
-func GetRedisClient() *redis.Client {
+func getRedisClient() *redis.Client {
 	if client == nil {
 		panic("Redis client is not initialized. Call InitRedis() first.")
 	}
@@ -54,10 +57,10 @@ func getOrderKey(id string) string {
 }
 
 func GetCartFromRedis(id string) (*models.Cart, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeDuration)
 	defer cancel()
 
-	client := GetRedisClient()
+	client := getRedisClient()
 
 	res, err := client.Get(ctx, getCartKey(id)).Bytes()
 	if err == redis.Nil {
@@ -75,14 +78,14 @@ func GetCartFromRedis(id string) (*models.Cart, error) {
 }
 
 func SaveToCart(id string, cart *models.Cart) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
+	ctx, cancel := context.WithTimeout(context.Background(), timeDuration)
 	defer cancel()
 	jsonCart, err := sonic.Marshal(cart)
 	if err != nil {
 		return err
 	}
 
-	err = GetRedisClient().Set(ctx, getCartKey(id), jsonCart, 0).Err()
+	err = getRedisClient().Set(ctx, getCartKey(id), jsonCart, 0).Err()
 	if err != nil {
 		return err
 	}
@@ -90,7 +93,7 @@ func SaveToCart(id string, cart *models.Cart) error {
 }
 
 func DeleteCartFromRedis(id string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), timeDuration)
 	defer cancel()
 
 	deleted, err := client.Del(ctx, getCartKey(id)).Result()
@@ -119,54 +122,4 @@ func FindCartItem(productId, id string) (*models.CartItem, error) {
 		}
 	}
 	return nil, fmt.Errorf("item not found in cart")
-}
-
-func CreateOrder(id string, cart *models.Cart, createdAT time.Time) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*10)
-	defer cancel()
-	total := 0.0
-	for _, val := range cart.Items {
-		total += val.Price
-	}
-	order := &models.Order{
-		OrderNumber: generateOrderId(),
-		UserID:      cart.UserID,
-		Status:      "confirmed",
-		Items:       cart.Items,
-		TotalPrice:  total,
-		CreatedAt:   createdAT,
-	}
-	orderJSON, err := sonic.Marshal(order)
-	if err != nil {
-		return err
-	}
-	err = GetRedisClient().Set(ctx, getOrderKey(id), orderJSON, 0).Err()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func generateOrderId() string {
-	rand.Seed(time.Now().UnixNano())
-	return fmt.Sprintf("ORDER-%06d", rand.Intn(1000000))
-}
-
-func GetOrderFromRedis(id string) (*models.Order, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	result, err := GetRedisClient().Get(ctx, getOrderKey(id)).Bytes()
-	if err == redis.Nil {
-		return nil, nil
-	} else if err != nil {
-		return nil, err
-	}
-	var order *models.Order
-	err = sonic.Unmarshal(result, &order)
-	if err != nil {
-		return nil, err
-	}
-
-	return order, nil
 }

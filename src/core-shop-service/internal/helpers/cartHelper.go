@@ -17,7 +17,7 @@ func HeaderTrimming(header string) (token string, msg error) {
 }
 
 func SendWithHeaders(header string, orderJSON []byte) (*http.Response, error) {
-	req, err := http.NewRequest("POST", "http://cart-service:8083/cart/orders", bytes.NewReader(orderJSON))
+	req, err := http.NewRequest("POST", "http://cart-service:8083/cart", bytes.NewReader(orderJSON))
 	if err != nil {
 
 		return nil, fmt.Errorf("error creating request")

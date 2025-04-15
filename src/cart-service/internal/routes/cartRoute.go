@@ -7,14 +7,23 @@ import (
 )
 
 func CartManager(approachingRoute *gin.Engine) {
+
 	cartRoutes := approachingRoute.Group("/cart")
 	{
-		cartRoutes.POST("/orders", repositories.AddToCart())
+		cartRoutes.POST("", repositories.AddToCart())
 		cartRoutes.GET("", repositories.GetCart())
 		cartRoutes.DELETE(":id", repositories.DeleteItemFromCart())
 		cartRoutes.DELETE("", repositories.ClearCart())
 		cartRoutes.GET(":product_id", repositories.FindCartItemsByID())
-		cartRoutes.POST("/checkout", repositories.OrderCreating())
-		cartRoutes.POST("/order", repositories.GetOrder())
+
+	}
+}
+
+func OrderManager(route *gin.Engine) {
+	orderRoute := route.Group("/order")
+	{
+		orderRoute.POST("/checkout", repositories.OrderCreating())
+		orderRoute.POST("", repositories.GetOrder())
+		orderRoute.POST("/status:status", repositories.ChangeStatus())
 	}
 }
