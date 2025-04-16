@@ -27,6 +27,7 @@ func main() {
 		}
 
 		for _, update := range updates {
+			go repository.RunNotifications(getId(&update))
 			offset = update.Id + 1
 			if client.UserSessions == nil {
 				client.UserSessions = make(map[int]*models.UserSession)
@@ -38,5 +39,13 @@ func main() {
 				handlers.HandleMessage(update, client)
 			}
 		}
+	}
+}
+
+func getId(update *models.Update) int {
+	if update.Message != nil {
+		return update.Message.Chat.Id
+	} else {
+		return update.CallbackQuery.Message.Chat.Id
 	}
 }

@@ -30,19 +30,14 @@ func OrderCreating() gin.HandlerFunc {
 	}
 }
 
-type user struct {
-	UserID string `json:"id"`
-}
-
 func GetOrder() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var id user
-		if err := c.ShouldBindJSON(&id); err != nil {
-			c.JSON(400, gin.H{"error": "Invalid JSON"})
-			return
-		}
 
-		order, err := redis.GetOrderFromRedis(id.UserID)
+		id := c.Param("id")
+		if id == "" {
+			c.JSON(500, gin.H{"error": "id is null"})
+		}
+		order, err := redis.GetOrderFromRedis(id)
 		if err != nil {
 			c.JSON(404, gin.H{"error": "Can not find order"})
 			return

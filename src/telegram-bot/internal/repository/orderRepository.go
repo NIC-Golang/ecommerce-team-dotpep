@@ -1,14 +1,13 @@
 package repository
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
 	"log"
-	"net/http"
-	"strings"
 	"telegram-bot/internal/db"
 	"telegram-bot/internal/helpers"
 	"telegram-bot/internal/models"
+	"time"
 )
 
 func (client *Client) CheckOrders(update models.Update, callbackId int) {
@@ -21,7 +20,7 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 	user, err := repo.findUser(callbackId)
 	log.Printf("Error finding user:%v\n", err)
 
-	order, err := sendToRedis(user.NotifierID)
+	order, err := helpers.GetRedisOrder(user.NotifierID)
 	log.Printf("Erorr sending to notifier: %v\n", err)
 	textItem := "🛍️ Order details:\n"
 	for _, item := range order.Items {
@@ -37,19 +36,42 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 	client.SendMessage(callbackId, textItem+orderNum+orderDate+orderStatus+"💬 We will send you a notification as soon as the order is delivered!")
 }
 
-func sendToRedis(id string) (*models.Order, error) {
-	resp, err := http.Post("http://cart-service:8083/cart/order", "application/json", strings.NewReader(fmt.Sprintf(`{"id":"%s"}`, id)))
+func (client *Client) CheckStatus(id string, ctx context.Context, update *models.Update) error {
+	order, err := helpers.GetRedisOrder(id)
 	if err != nil {
-		return nil, helpers.ErrorHelper(err, "error sending request to notifier-service")
+		return err
 	}
+	ticker := time.NewTicker(30 * time.Second)
+	status := order.Status
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			updatedOrder, err := helpers.GetRedisOrder(id)
+			if err != nil {
+				return err
+			}
+			if status != updatedOrder.Status {
+				status = updatedOrder.Status
+				text := helpers.CreateStatusMessage(updatedOrder)
+				if text != "" {
+					client.SendMessage(update.CallbackQuery.Message.Chat.Id, text)
+				} else {
+					return fmt.Errorf("error during sending a message")
+				}
+			}
 
-	defer resp.Body.Close()
-	var order *models.Order
-	err = json.NewDecoder(resp.Body).Decode(&order)
-	if err != nil {
-		return nil, helpers.ErrorHelper(err, "error parsing orders from JSON")
-	} else if order == nil {
-		return nil, fmt.Errorf("order is empty")
+		case <-ctx.Done():
+			return ctx.Err()
+		}
 	}
-	return order, nil
+}
+
+func RunNotifications(id int) {
+	mode, _ := NotifyMode(id)
+	if mode == "on" {
+		//TODO
+	} else {
+		return
+	}
 }
