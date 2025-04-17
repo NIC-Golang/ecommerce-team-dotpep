@@ -34,8 +34,8 @@ func HandleCallback(update models.Update, client *repository.Client) {
 		client.SendMessage(queryChatId, "Notifications are disabled")
 
 	case "notify_yes":
-		go repository.RunNotifications(queryChatId)
 		repository.NotificationsOnOff(queryChatId, true)
+		go client.RunNotifications(queryChatId, update, session)
 		client.SendMessage(queryChatId, "Notifications are enabled")
 
 	case "cancel":

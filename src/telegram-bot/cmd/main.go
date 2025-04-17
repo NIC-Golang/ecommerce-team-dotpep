@@ -27,7 +27,8 @@ func main() {
 		}
 
 		for _, update := range updates {
-			go repository.RunNotifications(getId(&update))
+			updateCopy := update
+			log.Printf("Trying to run goroutine with update: %v and id:%d\n", updateCopy, getId(&update))
 			offset = update.Id + 1
 			if client.UserSessions == nil {
 				client.UserSessions = make(map[int]*models.UserSession)

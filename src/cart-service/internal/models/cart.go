@@ -22,5 +22,6 @@ type Order struct {
 	Items       []CartItem `json:"items"`
 	CreatedAt   time.Time  `json:"created_at"`
 	Status      string     `json:"status"`
+	LastStatus  string     `json:"last_status"`
 	TotalPrice  float64    `json:"total_price"`
 }

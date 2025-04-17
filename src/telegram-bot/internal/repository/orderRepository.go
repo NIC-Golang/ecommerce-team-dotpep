@@ -18,10 +18,13 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 	repo := NewUserRepository(dbConn)
 
 	user, err := repo.findUser(callbackId)
-	log.Printf("Error finding user:%v\n", err)
-
+	if err != nil {
+		log.Printf("Error finding user:%v\n", err)
+	}
 	order, err := helpers.GetRedisOrder(user.NotifierID)
-	log.Printf("Erorr sending to notifier: %v\n", err)
+	if err != nil {
+		log.Printf("Erorr sending to notifier: %v\n", err)
+	}
 	textItem := "🛍️ Order details:\n"
 	for _, item := range order.Items {
 		textItem += fmt.Sprintf("• %s - %d \n", item.Description, item.Quantity)
@@ -37,23 +40,26 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 }
 
 func (client *Client) CheckStatus(id string, ctx context.Context, update *models.Update) error {
-	order, err := helpers.GetRedisOrder(id)
-	if err != nil {
-		return err
-	}
+	log.Println("Goroutine CheckStatus has started!")
+
 	ticker := time.NewTicker(30 * time.Second)
-	status := order.Status
 	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ticker.C:
-			updatedOrder, err := helpers.GetRedisOrder(id)
+			order, err := helpers.GetRedisOrder(id)
 			if err != nil {
-				return err
+				log.Println("error getting updated order:", err)
+				continue
 			}
-			if status != updatedOrder.Status {
-				status = updatedOrder.Status
-				text := helpers.CreateStatusMessage(updatedOrder)
+
+			log.Printf("Checking order id:%s status: %s / lastStatus: %s\n", order.UserID, order.Status, order.LastStatus)
+
+			if order.Status != order.LastStatus {
+				log.Println("I am right here")
+				text := helpers.CreateStatusMessage(order)
+				log.Println("Nope, I am here")
 				if text != "" {
 					client.SendMessage(update.CallbackQuery.Message.Chat.Id, text)
 				} else {
@@ -62,16 +68,30 @@ func (client *Client) CheckStatus(id string, ctx context.Context, update *models
 			}
 
 		case <-ctx.Done():
+			log.Println("Context canceled, stopping CheckStatus goroutine")
 			return ctx.Err()
 		}
 	}
 }
 
-func RunNotifications(id int) {
+func (client *Client) RunNotifications(id int, update models.Update, session *models.UserSession) {
+	fmt.Println("Goroutine has started the work!")
+	ctx, cancel := context.WithCancel(context.Background())
+	session.Cancel = cancel
+	dbConn, err := db.ConnectToSQL()
+	if err != nil {
+		log.Fatal(err)
+	}
+	repo := NewUserRepository(dbConn)
+	user, err := repo.findUser(id)
+	if err != nil {
+		log.Fatalln("Gorutine error: ", err)
+	}
 	mode, _ := NotifyMode(id)
 	if mode == "on" {
-		//TODO
+		go client.CheckStatus(user.NotifierID, ctx, &update)
 	} else {
+		session.Cancel()
 		return
 	}
 }

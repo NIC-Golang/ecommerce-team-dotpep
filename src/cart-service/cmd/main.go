@@ -32,6 +32,7 @@ func main() {
 	router := gin.Default()
 	router.SetTrustedProxies([]string{ipAdress})
 	routes.CartManager(router)
+	routes.OrderManager(router)
 	err = router.Run(ipAdress + ":" + port)
 	if err != nil {
 		fmt.Printf("Trying to run server on ip %s ...", ipAdress)

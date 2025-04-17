@@ -24,6 +24,6 @@ func OrderManager(route *gin.Engine) {
 	{
 		orderRoute.POST("/checkout", repositories.OrderCreating())
 		orderRoute.GET("/:id", repositories.GetOrder())
-		orderRoute.POST("/status:status", repositories.ChangeStatus())
+		orderRoute.POST("/status/:status", repositories.ChangeStatus())
 	}
 }

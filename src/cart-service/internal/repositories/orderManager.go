@@ -64,6 +64,7 @@ func ChangeStatus() gin.HandlerFunc {
 			c.JSON(500, gin.H{"error": err.Error()})
 			return
 		}
+		order.LastStatus = order.Status
 		order.Status = status
 
 		err = redis.SaveToOrder(id, order)

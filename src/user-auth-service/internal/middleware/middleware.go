@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"go/auth-service/internal/helpers"
 	"net/http"
 	"strings"
@@ -76,7 +75,6 @@ func TakeIdFromToken() gin.HandlerFunc {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err})
 			return
 		}
-		fmt.Println("Taken id:", claims.Uid)
 		c.JSON(http.StatusOK, gin.H{"id": claims.Uid, "email": claims.Email})
 	}
 }
