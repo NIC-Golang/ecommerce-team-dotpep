@@ -27,8 +27,14 @@ func main() {
 		}
 
 		for _, update := range updates {
+			if update.Message == nil && update.CallbackQuery == nil {
+				continue
+			}
 			updateCopy := update
+			id := getId(&update)
 			log.Printf("Trying to run goroutine with update: %v and id:%d\n", updateCopy, getId(&update))
+			session := getSession(id, client)
+			go client.RunNotifications(id, update, session)
 			offset = update.Id + 1
 			if client.UserSessions == nil {
 				client.UserSessions = make(map[int]*models.UserSession)
@@ -49,4 +55,13 @@ func getId(update *models.Update) int {
 	} else {
 		return update.CallbackQuery.Message.Chat.Id
 	}
+}
+
+func getSession(id int, client *repository.Client) *models.UserSession {
+	session, exists := client.UserSessions[id]
+	if !exists {
+		session = &models.UserSession{Step: "start"}
+		client.UserSessions[id] = session
+	}
+	return session
 }

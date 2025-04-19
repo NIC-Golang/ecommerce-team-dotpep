@@ -22,6 +22,7 @@ func CartManager(approachingRoute *gin.Engine) {
 func OrderManager(route *gin.Engine) {
 	orderRoute := route.Group("/order")
 	{
+		orderRoute.POST("/update/:id", repositories.OrderUpdate())
 		orderRoute.POST("/checkout", repositories.OrderCreating())
 		orderRoute.GET("/:id", repositories.GetOrder())
 		orderRoute.POST("/status/:status", repositories.ChangeStatus())

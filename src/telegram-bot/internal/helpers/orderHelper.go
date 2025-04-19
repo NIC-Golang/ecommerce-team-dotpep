@@ -2,7 +2,9 @@ package helpers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"strings"
 	"telegram-bot/internal/models"
 
 	"github.com/bytedance/sonic"
@@ -44,4 +46,20 @@ func GetRedisOrder(id string) (*models.Order, error) {
 		return nil, err
 	}
 	return order, nil
+}
+
+func UpdateOrder(id string, order *models.Order) {
+	orderJSON, err := sonic.Marshal(order)
+	if err != nil {
+		log.Fatal(err)
+	}
+	url := fmt.Sprintf("http://cart-service:8083/order/update/%s", id)
+	resp, err := http.Post(url, "application/json", strings.NewReader(string(orderJSON)))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 && resp.StatusCode != 201 {
+		log.Fatalf("status code isn't a 200 or 201!, error: %v", err)
+	}
 }

@@ -39,7 +39,7 @@ func (client *Client) CheckOrders(update models.Update, callbackId int) {
 	client.SendMessage(callbackId, textItem+orderNum+orderDate+orderStatus+"💬 We will send you a notification as soon as the order is delivered!")
 }
 
-func (client *Client) CheckStatus(id string, ctx context.Context, update *models.Update) error {
+func (client *Client) CheckStatus(userId int, id string, ctx context.Context, update *models.Update) error {
 	log.Println("Goroutine CheckStatus has started!")
 
 	ticker := time.NewTicker(30 * time.Second)
@@ -60,8 +60,11 @@ func (client *Client) CheckStatus(id string, ctx context.Context, update *models
 				log.Println("I am right here")
 				text := helpers.CreateStatusMessage(order)
 				log.Println("Nope, I am here")
+				log.Printf("Text: %s, id: %d\n", text, update.CallbackQuery.Message.Chat.Id)
 				if text != "" {
 					client.SendMessage(update.CallbackQuery.Message.Chat.Id, text)
+					order.LastStatus = order.Status
+					go helpers.UpdateOrder(id, order)
 				} else {
 					return fmt.Errorf("error during sending a message")
 				}
@@ -89,7 +92,7 @@ func (client *Client) RunNotifications(id int, update models.Update, session *mo
 	}
 	mode, _ := NotifyMode(id)
 	if mode == "on" {
-		go client.CheckStatus(user.NotifierID, ctx, &update)
+		go client.CheckStatus(id, user.NotifierID, ctx, &update)
 	} else {
 		session.Cancel()
 		return

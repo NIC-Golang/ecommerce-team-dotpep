@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"cart-service/golang/internal/helpers"
+	"cart-service/golang/internal/models"
 	"cart-service/golang/internal/redis"
 	"time"
 
@@ -73,5 +74,25 @@ func ChangeStatus() gin.HandlerFunc {
 			return
 		}
 		c.JSON(201, gin.H{"message": "Order's status updated successfully!"})
+	}
+}
+
+func OrderUpdate() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id := c.Param("id")
+
+		var order models.Order
+		if err := c.ShouldBindJSON(&order); err != nil {
+			c.JSON(500, gin.H{"error": "Error with taking order"})
+			return
+		}
+
+		err := redis.SaveToOrder(id, &order)
+		if err != nil {
+			c.JSON(500, gin.H{"error": "Error with saving order"})
+			return
+		}
+
+		c.JSON(200, gin.H{"message": "Order updated!"})
 	}
 }
