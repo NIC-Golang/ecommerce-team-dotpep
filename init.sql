@@ -8,3 +8,9 @@ CREATE TABLE users (
     notifier_id VARCHAR(191) NOT NULL UNIQUE,
     notify_mode BOOL NOT NULL
 );
+
+CREATE TABLE test_users(
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    email       VARCHAR(191) NOT NULL UNIQUE,
+    name        VARCHAR(30) NOT NULL
+)
