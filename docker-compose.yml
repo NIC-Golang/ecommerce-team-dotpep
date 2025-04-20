@@ -135,6 +135,7 @@ services:
     container_name: mysql
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./test-init.sql:/docker-entrypoint-initdb.d/test-init.sql
     environment:
       - MYSQL_ROOT_PASSWORD=${ROOT_PASSWORD}
       - MYSQL_DATABASE=notifier
