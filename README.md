@@ -6,22 +6,6 @@ There is 2 teams, for each 3 students and 1 mentor:
 
 ---
 
-**@dotpep, (github_link) Mentor - 3 students:**
-
-- @, Максим (github_link), core service
-- @, Нуртай (github_link), auth/user service
-- @, Артем (github_link), scraper service
-
----
-
-**@alfinkly, (github_link) Mentor - 3 students:**
-
-- @, Жанболат (github_link), core service
-- @, Ергали (github_link), auth/user service
-- @, Бексултан (github_link), scraper service
-
----
-
 Main goals of this project is to mentor.
 
 ## Table of Content
